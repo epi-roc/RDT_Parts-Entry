@@ -3,725 +3,475 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EPIROC ROCKTOOLS | RockTool Consumption Data Entry</title>
-    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-    <style>
-        :root {
-            --epiroc-grey: #2D2D2D;
-            --epiroc-yellow: #FFCC00;
-            --epiroc-bg: skyblue;
-            --success-green: #00FF7F;
-            --error-red: #dc3545;
-        }
+    <title>EPIROC | RockTool Consumption</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<style>
+    :root { --epi-black: #000; --epi-yellow: #FFCE00; --bg: #0c0c0c; --card: #181818; --text: #fff; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; padding-bottom: 50px; }
 
-        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: var(--epiroc-bg); padding: 15px; margin: 0; color: #fff; }
-        
-        .header-section { 
-            background-color: var(--epiroc-grey); 
-            border-bottom: 5px solid var(--epiroc-yellow); 
-            display: flex; justify-content: center; align-items: center; 
-            padding: 15px; margin-bottom: 20px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-        }
+    header { background-color: #1a1a1a; padding: 10px 20px; border-bottom: 3px solid var(--epi-yellow); }
+    .header-container { display: flex; align-items: center; justify-content: space-between; max-width: 1200px; margin: 0 auto; }
+    .header-title { color: #ffffff; font-size: 1.5rem; font-weight: bold; text-transform: uppercase; text-align: center; flex-grow: 1; }
+    input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
 
-        .form-container { 
-            background: white; 
-            box-shadow: 0 8px 25px rgba(0,0,0,0.3); 
-            max-width: 950px; 
-            margin: 0 auto; 
-            border-radius: 10px; 
-            padding-bottom: 25px;
-            color: #333;
-            overflow: hidden;
-        }
+    .control-bar { background: #111; padding: 15px 20px; display: grid; gap: 12px; border-bottom: 1px solid #222; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); align-items: end; }
+    .item { display: flex; flex-direction: column; gap: 4px; }
+    .item label { font-size: 0.65rem; font-weight: 800; color: var(--epi-yellow); text-transform: uppercase; }
+    .item select, .item input { background: #262626; border: 1px solid #444; color: #fff; padding: 8px; border-radius: 4px; font-size: 0.85rem; width: 100%; outline: none; }
+    .item select:focus, .item input:focus { border-color: var(--epi-yellow); }
 
-        .section-row {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            padding: 20px;
-            border-bottom: 1px solid #eee;
-        }
+    .sync-btn { background: var(--epi-yellow); color: #000; border: none; padding: 10px; border-radius: 4px; font-weight: 900; cursor: pointer; text-transform: uppercase; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 5px; }
+    .sync-btn:hover { background: #e6b800; }
 
-        .input-group { display: flex; flex-direction: column; }
-        .input-group label { 
-            font-size: 11px; 
-            font-weight: 900; 
-            text-transform: uppercase; 
-            color: var(--epiroc-grey); 
-            margin-bottom: 5px;
-        }
+    main { padding: 25px 20px; max-width: 98vw; margin: 0 auto; display: none; }
+    
+    .table-wrapper { overflow-x: auto; background: var(--card); border: 1px solid #333; border-radius: 6px; margin-bottom: 20px; }
+    #fleet-container { min-width: max-content; }
+    
+    .t-header-row { display: flex; gap: 8px; padding: 10px; background: #222; font-size: 0.7rem; text-transform: uppercase; font-weight: bold; color: #aaa; border-bottom: 2px solid var(--epi-yellow); position: sticky; top: 0; z-index: 10; }
+    .t-row { display: flex; gap: 8px; padding: 8px 10px; border-bottom: 1px solid #222; align-items: stretch; background: #111; }
+    .t-row:hover { background: #1a1a1a; }
 
-        input, select, textarea { 
-            padding: 10px; 
-            border: 2px solid #ddd; 
-            border-radius: 5px; 
-            font-size: 13px;
-            font-weight: 600;
-            transition: 0.2s;
-        }
+    .t-fleet { width: 180px; flex-shrink: 0; display: flex; align-items: center; font-weight: bold; color: var(--epi-yellow); font-size: 0.9rem; border-right: 1px solid #333; padding-right: 10px; }
 
-        input:focus, select:focus {
-            outline: none;
-            border-color: var(--epiroc-yellow) !important;
-            box-shadow: 0 0 5px rgba(255, 204, 0, 0.3);
-        }
+    .t-row input, .t-row select { background: #000; color: #fff; border: 1px solid #444; padding: 6px; font-size: 0.8rem; border-radius: 3px; width: 100%; outline: none; }
+    .t-row input:focus, .t-row select:focus { border-color: var(--epi-yellow); }
 
-        .verify-bar {
-            background-color: var(--epiroc-grey);
-            color: white;
-            padding: 15px 20px;
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
+    .t-parts { display: flex; gap: 5px; }
+    .t-part-block { display: flex; gap: 4px; align-items: center; background: #000; padding: 4px; border: 1px solid #333; border-radius: 4px; flex-shrink: 0; }
+    
+    .p-type { width: 120px; }
+    .p-desc { width: 160px; }
+    .p-no { width: 110px; }
+    .p-reason { width: 130px; }
+    .p-qty { width: 60px; }
+    .p-old { width: 60px; border-color: #00E676 !important; }
+    .p-bend { width: 70px; border-color: #F44336 !important; }
 
-        .part-block {
-            border: 2px solid var(--epiroc-grey);
-            margin: 20px;
-            border-radius: 8px;
-            background: #fff;
-            overflow: hidden;
-        }
+    .btn-del-table { background: #444; color: #fff; border: none; padding: 6px 10px; border-radius: 3px; cursor: pointer; margin-left: 2px; }
+    .btn-del-table:hover { background: #ff4444; }
 
-        .part-header {
-            background: var(--epiroc-grey);
-            color: var(--epiroc-yellow);
-            padding: 10px;
-            font-size: 14px;
-            font-weight: 900;
-            display: flex;
-            justify-content: space-between;
-        }
+    .btn-add-table { background: #222; color: var(--epi-yellow); border: 1px dashed var(--epi-yellow); padding: 0 15px; border-radius: 4px; cursor: pointer; font-size: 1rem; font-weight: bold; display: flex; align-items: center; justify-content: center; margin-left: 5px; flex-shrink: 0; }
+    .btn-add-table:hover { background: #333; }
 
-        .part-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-            padding: 15px;
-        }
+    .primary-btn { background: var(--epi-yellow); color: #000; border: none; padding: 15px; border-radius: 6px; font-weight: 900; font-size: 1rem; cursor: pointer; width: 100%; max-width: 400px; margin: 20px auto; display: block; text-transform: uppercase; }
+    
+    .table-wrapper::-webkit-scrollbar { height: 10px; }
+    .table-wrapper::-webkit-scrollbar-track { background: #111; }
+    .table-wrapper::-webkit-scrollbar-thumb { background: #444; border-radius: 5px; }
+    .table-wrapper::-webkit-scrollbar-thumb:hover { background: var(--epi-yellow); }
 
-        .bulk-upload-zone {
-            background: #f1f3f5;
-            margin: 20px;
-            padding: 18px;
-            border-radius: 8px;
-            border: 2px dashed var(--epiroc-grey);
-        }
+    /* Modal Styles */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; z-index: 9000; padding: 20px; }
+    .modal-content { background: #111; border: 1px solid #444; border-top: 4px solid var(--epi-yellow); border-radius: 8px; width: 100%; max-width: 800px; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; }
+    .modal-header { padding: 15px 20px; background: #000; font-weight: bold; font-size: 1.2rem; color: var(--epi-yellow); text-transform: uppercase; border-bottom: 1px solid #333; }
+    .modal-body { padding: 20px; overflow-y: auto; flex-grow: 1; }
+    .modal-footer { padding: 15px 20px; background: #000; border-top: 1px solid #333; display: flex; justify-content: flex-end; gap: 10px; }
+    
+    .summary-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; color: #fff; }
+    .summary-table th { background: #222; color: #aaa; padding: 8px; text-align: left; border-bottom: 1px solid #444; text-transform: uppercase; }
+    .summary-table td { padding: 8px; border-bottom: 1px solid #222; }
+    
+    .btn-cancel { background: transparent; border: 1px solid #666; color: #fff; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+    .btn-confirm { background: var(--epi-yellow); border: none; color: #000; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: 900; text-transform: uppercase; }
 
-        .hidden { display: none; }
-        .btn { 
-            padding: 12px; border: none; border-radius: 5px; cursor: pointer; 
-            font-weight: 900; text-transform: uppercase; transition: 0.3s; 
-        }
-        .btn-primary { background: var(--epiroc-grey); color: var(--epiroc-yellow); border: 1px solid var(--epiroc-yellow); }
-        .btn-success { background: var(--epiroc-grey); color: var(--epiroc-yellow); width: 100%; margin-top: 25px; border-top: 5px solid var(--epiroc-yellow); font-size: 16px; }
-        
-        .status-tag { padding: 5px 12px; border-radius: 5px; font-size: 12px; font-weight: bold; }
-        .locked { background: var(--error-red); color: white; }
-        .unlocked { background: #198754; color: white; }
-        
-        .busy-warning { color: var(--error-red); font-size: 13px; font-weight: bold; display: none; text-align: center; animation: blinker 1.5s linear infinite; margin-top: 10px; }
-        @keyframes blinker { 50% { opacity: 0; } }
-    </style>
+    #loader { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.9); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; color: var(--epi-yellow); font-weight: bold; font-size: 1.2rem; display: none; }
+</style>
 </head>
 <body>
 
-<div class="header-section">
-    <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; max-width: 950px; padding: 0 10px;">
-        <div style="text-align: center; flex: 1;">
-            <h2 style="margin: 0; color: var(--epiroc-yellow); letter-spacing: 2px; font-size: 20px; text-transform: uppercase;">
-                Epiroc RockTool Consumption Data Entry
-            </h2>
-        </div>
+<div id="loader"><i class="fas fa-spinner fa-spin fa-2x" style="margin-bottom: 15px;"></i> <span id="load-text">Processing...</span></div>
+
+<header>
+    <div class="header-container">
+        <div class="header-title">ROCKTOOL CONSUMPTION REPORT</div>
+    </div>
+</header>
+
+<div class="control-bar" id="auth-bar">
+    <div class="item"><label>Technician ID</label><input type="text" id="user" placeholder="Tech ID"></div>
+    <div class="item"><label>Password</label><input type="password" id="pass" placeholder="••••"></div>
+    <div class="item"><button class="sync-btn" onclick="handleSync()"><i class="fas fa-lock" id="icon"></i> AUTHENTICATE & SYNC</button></div>
+</div>
+
+<div class="control-bar" id="data-bar" style="display: none;">
+    <div class="item"><label>Date</label><input type="date" id="date"></div>
+    <div class="item"><label>Customer</label><select id="cust" onchange="updateSites()"></select></div>
+    <div class="item"><label>Work Site</label><select id="site" onchange="buildFleetDashboard()"></select></div>
+    
+    <div class="item" style="flex-direction: row; gap: 10px;">
+        <div class="item" style="flex-direction: row; gap: 10px;">
+    <button class="sync-btn" style="background:#00E676; color:#000;" onclick="downloadCSVTemplate()"><i class="fas fa-file-csv"></i> TEMPLATE</button>
+    
+    <input type="file" id="csvFileInput" accept=".csv" style="display:none" onchange="handleFileUpload(event)">
+    <button class="sync-btn" style="background:#fff; color:#000;" onclick="document.getElementById('csvFileInput').click()"><i class="fas fa-upload"></i> UPLOAD CSV</button>
+</div>
+        <button class="sync-btn" style="background:#333; color:#fff; width: 100%;" onclick="location.reload()"><i class="fas fa-sign-out-alt"></i> LOGOUT</button>
     </div>
 </div>
 
-<div class="form-container">
-    <form id="consumptionForm">
-        <div class="section-row" style="grid-template-columns: 1fr 1fr;">
-            <div class="input-group">
-                <label>Date *</label>
-                <input type="date" id="valDate" name="Entry_Date" required>
-            </div>
-            <div class="input-group">
-                <label>Technician ID *</label>
-                <input type="text" id="valTech" name="Technician_Name" placeholder="tech_name" required>
-            </div>
+<main id="main-area">
+    <div class="table-wrapper">
+        <div id="fleet-container"></div>
+    </div>
+    <button type="button" class="primary-btn" onclick="reviewData()">REVIEW & SUBMIT RECORDS</button>
+</main>
+
+<div class="modal-overlay" id="confirmModal">
+    <div class="modal-content">
+        <div class="modal-header">Confirm Submission</div>
+        <div class="modal-body">
+            <p style="margin-bottom: 15px; font-size: 0.9rem; color: #ccc;">Verify quantities below. Reconcile returned vs lost items before uploading to Vault.</p>
+            <table class="summary-table">
+                <thead>
+                    <tr>
+                        <th>Fleet</th>
+                        <th>Type / Description</th>
+                        <th>Reason</th>
+                        <th>New Qty</th>
+                        <th style="color:#00E676;">Old Rtn</th>
+                        <th style="color:#F44336;">Lost/Bent</th>
+                    </tr>
+                </thead>
+                <tbody id="summaryBody"></tbody>
+            </table>
         </div>
-
-        <div class="verify-bar">
-            <div class="input-group" style="flex: 2;">
-                <input type="password" id="passInput" placeholder="Enter Site Access Password">
-            </div>
-            <button type="button" class="btn btn-primary" id="verifyBtn" onclick="verifyCredentials()" style="flex: 1;">Authenticate & Download Data</button>
-            <span id="statusLabel" class="status-tag locked">LOCKED</span>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeModal()">Edit</button>
+            <button class="btn-confirm" id="finalSubmitBtn" onclick="executeSubmission()">Confirm & Upload</button>
         </div>
-
-        <div id="protectedContent" class="hidden">
-            <div class="section-row" style="background-color: #fef9e7;">
-                <div class="input-group">
-                    <label>Customer Name *</label>
-                    <select id="customerSelect" name="Customer_Name" onchange="updateSites()" required>
-                        <option value="">-- Select Customer --</option>
-                    </select>
-                </div>
-                <div class="input-group">
-                    <label>Work Site *</label>
-                    <select id="workSiteSelect" name="Work_Site" onchange="updateFleet()">
-                        <option value="">-- Select Site --</option>
-                    </select>
-                </div>
-                <div class="input-group">
-                    <label>Fleet ID *</label>
-                    <select id="fleetSelect" name="Fleet_ID" onchange="updateGroups()">
-    <option value="">-- Select Fleet --</option>
-</select>
-                </div>
-            </div>
-            <div class="section-row" style="background-color: #fef9e7; padding-top: 0; border-bottom: 1px solid #ddd;">
-                <div class="input-group">
-                    <label>Impact Hours *</label>
-                    <input type="number" id="valHours" name="Impact_Hours" placeholder="Current Reading">
-                </div>
-            </div>
-
-            <div class="bulk-upload-zone">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                    <b style="font-size: 14px; color: var(--epiroc-grey);">BULK DATA PROCESSING</b>
-                    <div id="activityLog" style="font-size: 11px; color: #444; background: #fff; padding: 4px 8px; border-radius: 4px; border: 1px solid #ccc;">
-                        📅 LAST SYNC: <b id="lastDate">--</b> | 
-                        📊 ROWS: <b id="lastRows">0</b>
-                    </div>
-                </div>
-                <div style="display: grid; grid-template-columns: 1fr 2.5fr; gap: 12px;">
-                    <button type="button" class="btn btn-primary" onclick="generateDynamicTemplate()" style="font-size: 11px;">📥 GET TEMPLATE</button>
-                    <div style="display: flex; gap: 8px;">
-                        <input type="file" id="csvFileInput" accept=".csv" style="flex: 1; background: white; border: 1px solid #ccc;">
-                        <button type="button" class="btn btn-primary" onclick="handleBulkUpload()" id="bulkBtn" style="font-size: 11px;">🚀 UPLOAD CSV</button>
-                    </div>
-                </div>
-                <div id="busyWarning" class="busy-warning">⚠️ SERVER PROCESSING... DO NOT RE-CLICK</div>
-            </div>
-
-            <div id="partsContainer">
-                <div class="part-block" id="part-row-1">
-                    <div class="part-header"><span>PART ENTRY #1</span></div>
-                    <div class="part-grid">
-                        <div class="input-group">
-    <label>Group *</label>
-    <select name="part_group[]" class="group-sel" onchange="updateRowCascades(this)" required>
-        <option value="">-- Select --</option>
-    </select>
-</div>
-<div class="input-group">
-    <label>Type *</label>
-    <select name="part_type[]" class="type-sel" onchange="updateRowDesc(this)" required>
-        <option value="">-- Select Type --</option>
-    </select>
-</div>
-<div class="input-group">
-    <label>Description *</label>
-    <select name="part_desc[]" class="desc-sel" required>
-        <option value="">-- Select Description --</option>
-    </select>
-</div>
-<div class="input-group">
-    <label>Reason *</label>
-    <select name="reason[]" class="reason-sel" required>
-        <option value="">-- Select Reason --</option>
-    </select>
-</div>
-                        <div class="input-group">
-                            <label>Part Number</label>
-                            <div style="display: flex; gap: 8px;">
-                                <input type="text" name="part_no[]" class="part-input" placeholder="Scan or Type...">
-                                <button type="button" class="btn btn-primary" onclick="openScanner(this)" style="padding: 8px 12px; display: flex; align-items: center; justify-content: center;" title="Scan QR Code">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
-                                        <path d="M15 12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h1.172a3 3 0 0 0 2.12-.879l.83-.828A1 1 0 0 1 6.827 3h2.344a1 1 0 0 1 .707.293l.828.828A3 3 0 0 0 12.828 5H14a1 1 0 0 1 1 1v6zM2 4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-1.172a2 2 0 0 1-1.414-.586l-.828-.828A2 2 0 0 0 9.172 2H6.828a2 2 0 0 0-1.414.586l-.828.828A2 2 0 0 1 3.172 4H2z"/>
-                                        <path d="M8 11a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zm0 1a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/>
-                                        <path d="M3 6.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0z"/>
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="input-group">
-                            <label>Qty & Price</label>
-                            <div style="display: flex; gap: 8px;">
-                                <input type="number" name="qty[]" value="1" style="width: 35%;">
-                                <input type="number" step="any" name="unit_price[]" placeholder="INR Unit Price" style="width: 65%;">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div style="padding: 0 20px;">
-                <button type="button" class="btn" style="width: 100%; border: 2px dashed var(--epiroc-grey); color: var(--epiroc-grey); background: none;" onclick="addPartLine()">+ Add Another Part Entry</button>
-                <button type="submit" id="submitBtn" class="btn btn-success">Finalize & Submit All Records</button>
-            </div>
-        </div>
-    </form>
-</div>
-
-<div id="qrModal" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; flex-direction: column; justify-content: center; align-items: center;">
-    <div style="background: white; padding: 20px; border-radius: 8px; width: 90%; max-width: 500px; text-align: center;">
-        <h3 style="margin-top: 0; color: var(--epiroc-grey); font-weight: 900; text-transform: uppercase;">SCAN PART QR CODE</h3>
-        <div id="qr-reader" style="width: 100%; margin-bottom: 15px;"></div>
-        <button type="button" class="btn" onclick="closeScanner()" style="width: 100%; background: #dc3545; color: white; font-weight: bold;">CANCEL SCAN</button>
     </div>
 </div>
 
 <script>
-    // 🔗 CONFIGURATION
-    const scriptURL = "https://script.google.com/macros/s/AKfycbwnhqpKWtP7AdhT0NGIGwNIBWv3yTUU3jtXeD6QF-phPxe5ZKaGyw2RY5WBzezfefEp/exec";
+// 🚨 PASTE YOUR DEPLOYED GOOGLE APP SCRIPT URL HERE 🚨
+const scriptURL = "https://script.google.com/macros/s/AKfycbwnhqpKWtP7AdhT0NGIGwNIBWv3yTUU3jtXeD6QF-phPxe5ZKaGyw2RY5WBzezfefEp/exec";
 
-    // 📦 DYNAMIC DATA CONTAINERS
-    let customerToSites = {};
-    let siteToFleet = {};
-    let fleetToGroups = {}; // 👈 NEW: Maps exact groups strictly to fleets
-    let partsData = {};
-    let groupToReasons = {};
+let customerToSites = {};
+let siteToFleet = {};
+let fleetToTypes = {}; 
+let typeToDesc = {};
+let typeToReasons = {}; 
+let pendingPayload = []; 
 
-    // 🏁 INITIALIZATION
-    window.onload = function() {
-        document.getElementById('valDate').valueAsDate = new Date();
-    };
+window.onload = () => document.getElementById('date').valueAsDate = new Date();
 
-    // 🔒 SECURE AUTHENTICATION & DATA FETCH
-    function verifyCredentials() {
-        const user = document.getElementById('valTech').value.trim();
-        const pass = document.getElementById('passInput').value.trim();
-        if(!user || !pass) return alert("Please enter Technician ID and Password.");
-        
-        const btn = document.getElementById('verifyBtn');
-        btn.innerText = "AUTHENTICATING & DOWNLOADING DATA...";
-        btn.disabled = true;
+async function handleSync() {
+    const u = document.getElementById('user').value.trim();
+    const p = document.getElementById('pass').value.trim();
+    if (!u || !p) return alert("Please enter ID and Password");
 
-        fetch(scriptURL + "?action=check&u=" + encodeURIComponent(user) + "&p=" + encodeURIComponent(pass))
-        .then(r => r.json())
-        .then(data => {
-            if (data.status === "success") {
-                
-                // 1. REBUILD PARTS DATA FIRST (To get exact correct spellings)
-                partsData = {};
-                data.partsList.forEach(row => {
-                    let group = String(row[0] || "").trim();
-                    let type = String(row[1] || "").trim();
-                    let desc = String(row[2] || "").trim();
+    document.getElementById('loader').style.display = 'flex';
+    document.getElementById('load-text').innerText = "Authenticating...";
 
-                    if (group && type && desc) {
-                        if (!partsData[group]) partsData[group] = {};
-                        if (!partsData[group][type]) partsData[group][type] = [];
-                        if (!partsData[group][type].includes(desc)) partsData[group][type].push(desc);
-                    }
-                });
+    try {
+        const res = await fetch(scriptURL + "?action=check&u=" + encodeURIComponent(u) + "&p=" + encodeURIComponent(p));
+        const data = await res.json();
+        document.getElementById('loader').style.display = 'none';
 
-                // 2. REBUILD REASONS DATA
-                groupToReasons = {};
-                data.reasonsList.forEach(row => {
-                    let group = String(row[0] || "").trim();
-                    let reason = String(row[1] || "").trim();
-                    if (group && reason) {
-                        if (!groupToReasons[group]) groupToReasons[group] = [];
-                        if (!groupToReasons[group].includes(reason)) groupToReasons[group].push(reason);
-                    }
-                });
-
-                // 3. REBUILD FLEET DATA & MAP STRICT GROUPS
-                customerToSites = {};
-                siteToFleet = {};
-                fleetToGroups = {};
-
-                data.fleetList.forEach(row => {
-                    let cust = String(row[0] || "").trim();      // Col A
-                    let site = String(row[2] || "").trim();      // Col C 
-                    let fleet = String(row[3] || "").trim();     // Col D
-                    let groupsStr = String(row[5] || "").trim(); // Col F
-
-                    if (cust && site) {
-                        if (!customerToSites[cust]) customerToSites[cust] = [];
-                        if (!customerToSites[cust].includes(site)) customerToSites[cust].push(site);
-
-                        if (fleet) {
-                            if (!siteToFleet[site]) siteToFleet[site] = [];
-                            if (!siteToFleet[site].includes(fleet)) siteToFleet[site].push(fleet);
-                            
-                            // Map allowed groups strictly to THIS specific fleet
-                            if (!fleetToGroups[fleet]) fleetToGroups[fleet] = new Set();
-                            if (groupsStr) {
-                                groupsStr.split(',').forEach(g => {
-                                    let exactGroup = g.trim(); 
-                                    // 🚨 STRICT MATCH: Only adds it if spelled EXACTLY like this in Parts_Master
-                                    if (partsData[exactGroup]) {
-                                        fleetToGroups[fleet].add(exactGroup);
-                                    }
-                                });
-                            }
-                        }
-                    }
-                });
-
-                // 4. POPULATE INITIAL DROPDOWNS
-                const custSelect = document.getElementById('customerSelect');
-                const custKeys = Object.keys(customerToSites).sort();
-                custKeys.forEach(c => {
-                    let opt = document.createElement('option'); opt.value = c; opt.text = c; custSelect.add(opt);
-                });
-
-                if (custKeys.length === 1) {
-                    custSelect.value = custKeys[0];
-                    updateSites(); // Auto-trigger cascade
-                }
-
-                // 5. UNLOCK UI
-                document.getElementById('protectedContent').classList.remove('hidden');
-                document.getElementById('statusLabel').innerText = "✅ UNLOCKED & SYNCED";
-                document.getElementById('statusLabel').className = "status-tag unlocked";
-                btn.style.display = "none";
-                document.getElementById('passInput').readOnly = true;
-                document.getElementById('valTech').readOnly = true;
-                
-            } else if (data.status === "server_error") {
-                alert("Server Data Error: " + data.message);
-                btn.innerText = "Authenticate & Download Data";
-                btn.disabled = false;
-            } else { 
-                alert("Auth Failed: Incorrect Password or ID."); 
-                btn.innerText = "Authenticate & Download Data";
-                btn.disabled = false;
-            }
-        }).catch(err => {
-            console.error("Network Error:", err);
-            alert("Network Error: Could not reach server. Check internet or CORS permissions.");
-            btn.disabled = false;
-            btn.innerText = "Authenticate & Download Data";
-        });
-    }
-
-// ➕ ADD PART LINE
-    function addPartLine() {
-        const container = document.getElementById('partsContainer');
-        const rowId = document.querySelectorAll('.part-block').length + 1;
-        
-        if(rowId > 10) return alert("🚨 Max 10 lines allowed per manual entry.");
-        
-        const clone = document.getElementById('part-row-1').cloneNode(true);
-        clone.id = "part-row-" + rowId;
-        clone.querySelector('.part-header span').innerText = "PART ENTRY #" + rowId;
-        
-        const groupSel = clone.querySelector('.group-sel');
-        groupSel.innerHTML = '<option value="">-- Select --</option>';
-        
-        // 👈 Strictly populate new line with current Fleet's allowed groups
-        const fleet = document.getElementById('fleetSelect').value;
-        let allowed = fleet && fleetToGroups[fleet] ? Array.from(fleetToGroups[fleet]).sort() : [];
-        
-        allowed.forEach(g => {
-            let opt = document.createElement('option'); opt.value = g; opt.text = g; groupSel.add(opt);
-        });
-
-        clone.querySelector('.type-sel').innerHTML = '<option value="">-- Select Type --</option>';
-        clone.querySelector('.desc-sel').innerHTML = '<option value="">-- Select Description --</option>';
-        clone.querySelector('.reason-sel').innerHTML = '<option value="">-- Select Reason --</option>';
-
-        clone.querySelectorAll('select, input').forEach(i => {
-            i.value = (i.name === "qty[]" ? 1 : "");
-            i.style.borderColor = "#ddd"; 
-            i.style.backgroundColor = "white"; 
-        });
-
-        container.appendChild(clone);
-    }
-
-    // 📊 CASCADES
-    function updateSites() {
-        const customer = document.getElementById('customerSelect').value;
-        const siteSelect = document.getElementById('workSiteSelect');
-        const fleetSelect = document.getElementById('fleetSelect');
-        
-        siteSelect.innerHTML = '<option value="">-- Select Site --</option>';
-        fleetSelect.innerHTML = '<option value="">-- Select Fleet --</option>';
-
-        if (customerToSites[customer]) {
-            customerToSites[customer].sort().forEach(s => {
-                let opt = document.createElement('option'); opt.value = opt.text = s; siteSelect.add(opt);
-            });
-        }
-    }
-
-    function updateFleet() {
-        const site = document.getElementById('workSiteSelect').value;
-        const fleetSelect = document.getElementById('fleetSelect');
-        fleetSelect.innerHTML = '<option value="">-- Select Fleet --</option>';
-        if (siteToFleet[site]) {
-            const fleets = siteToFleet[site].sort();
-            fleets.forEach(f => {
-                let opt = document.createElement('option'); opt.value = opt.text = f; fleetSelect.add(opt);
-            });
-            if(fleets.length === 1) fleetSelect.value = fleets[0];
-        }
-        updateGroups(); // 👈 Trigger group enforcement when fleet changes!
-    }
-
-    // 🚨 NEW FUNCTION: Strictly enforces Part Groups based on Selected Fleet
-    function updateGroups() {
-        const fleet = document.getElementById('fleetSelect').value;
-        let allowed = fleet && fleetToGroups[fleet] ? Array.from(fleetToGroups[fleet]).sort() : [];
-        
-        // Update ALL Part Group dropdowns on the screen
-        document.querySelectorAll('.group-sel').forEach(sel => {
-            sel.innerHTML = '<option value="">-- Select --</option>'; // Wipes old hardcoded ghosts!
-            allowed.forEach(g => {
-                let opt = document.createElement('option'); opt.value = g; opt.text = g; sel.add(opt);
-            });
-            updateRowCascades(sel); // Wipes downstream Type and Description clean
-        });
-    }
-
-    function updateRowCascades(el) {
-        const block = el.closest('.part-block');
-        const group = el.value;
-        const typeSel = block.querySelector('.type-sel');
-        
-        // 🚨 FIX: Grab the Description Dropdown so we can wipe it out
-        const descSel = block.querySelector('.desc-sel'); 
-        const reasonSel = block.querySelector('.reason-sel');
-        
-        // Strictly wipe downstream dropdowns clean when Group changes!
-        typeSel.innerHTML = '<option value="">-- Select Type --</option>';
-        descSel.innerHTML = '<option value="">-- Select Description --</option>'; 
-        reasonSel.innerHTML = '<option value="">-- Select Reason --</option>';
-        
-        if (partsData[group]) {
-            Object.keys(partsData[group]).sort().forEach(t => {
-                let opt = document.createElement('option'); opt.value = t; opt.text = t; typeSel.add(opt);
-            });
-        }
-        
-        if (groupToReasons[group]) {
-            groupToReasons[group].sort().forEach(r => {
-                let opt = document.createElement('option'); opt.value = r; opt.text = r; reasonSel.add(opt);
-            });
-        }
-    }
-
-    function updateRowDesc(el) {
-        const block = el.closest('.part-block');
-        const group = block.querySelector('.group-sel').value;
-        const type = el.value;
-        const descSel = block.querySelector('.desc-sel');
-        
-        descSel.innerHTML = '<option value="">-- Select Description --</option>';
-        
-        if (partsData[group] && partsData[group][type]) {
-            partsData[group][type].sort().forEach(d => {
-                let opt = document.createElement('option'); opt.value = d; opt.text = d; descSel.add(opt);
-            });
-        }
-    }
-
-    // 📥 TEMPLATE ENGINE
-    function generateDynamicTemplate() {
-        const c = document.getElementById('customerSelect').value;
-        const s = document.getElementById('workSiteSelect').value;
-        const f = document.getElementById('fleetSelect').value;
-        if (!c || !s || !f) return alert("Select Core Info (Customer/Site/Fleet) first!");
-        
-        const headers = "Customer_Name,Work_Site,Fleet_ID,Entry_Date,Impact_Hours,Part_Group,Part_Type,Part_Description,Part_Number,Quantity,Unit_Price,Reason_to_Replace";
-        const date = new Date().toISOString().split('T')[0];
-        const row = `"${c}","${s}","${f}",${date},,,,,,,,`;
-        const blob = new Blob(["\uFEFF" + headers + "\n" + row], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = `Template_${s.replace(/\s+/g, '_')}.csv`;
-        link.click();
-    }
-
-    // 🚀 UPLOAD ENGINE
-    function handleBulkUpload() {
-        const file = document.getElementById('csvFileInput').files[0];
-        if (!file) return alert("Please select a file.");
-        
-        const btn = document.getElementById('bulkBtn');
-        const wrn = document.getElementById('busyWarning');
-        const techPass = document.getElementById('passInput').value;
-        
-        btn.disabled = true; 
-        wrn.style.display = "block";
-
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const rawContent = e.target.result;
-            const rows = rawContent.split(/\r?\n/).slice(1);
-            let payload = [];
+        if (data.status === "success") {
+            buildDatabase(data);
+            document.getElementById('auth-bar').style.display = 'none';
+            document.getElementById('data-bar').style.display = 'grid';
             
-            rows.forEach(row => {
-                if (!row.trim()) return;
-                const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                if (cols.length >= 12) {
-                    payload.push({
-                        Technician_Name: document.getElementById('valTech').value,
-                        Unlock_Password: techPass,
-                        Customer_Name: cols[0].replace(/"/g, '').trim(),
-                        Work_Site: cols[1].replace(/"/g, '').trim(),
-                        Fleet_ID: cols[2].replace(/"/g, '').trim(),
-                        Entry_Date: cols[3].trim(),
-                        Impact_Hours: cols[4].trim(),
-                        Part_Group: cols[5].trim(),
-                        Part_Type: cols[6].trim(),
-                        Part_Description: cols[7].replace(/"/g, '').trim(),
-                        Part_Number: cols[8].trim(),
-                        Quantity: cols[9].trim(),
-                        Unit_Price: cols[10].trim(),
-                        Reason_to_Replace: cols[11].replace(/"/g, '').trim(),
-                        File_ID: "BULK_" + Date.now()
+            const custSelect = document.getElementById('cust');
+            custSelect.innerHTML = '<option value="">- Select Customer -</option>';
+            Object.keys(customerToSites).sort().forEach(c => custSelect.add(new Option(c, c)));
+        } else {
+            alert("Auth Failed: Incorrect Password or ID.");
+        }
+    } catch (err) {
+        document.getElementById('loader').style.display = 'none';
+        alert("Network Error: " + err);
+    }
+}
+
+function buildDatabase(data) {
+    typeToDesc = {};
+    let groupToTypes = {}; 
+    
+    data.partsList.forEach(row => {
+        let group = String(row[0] || "").trim();
+        let type = String(row[1] || "").trim();
+        let desc = String(row[2] || "").trim();
+        
+        if (group && type) {
+            if (!groupToTypes[group]) groupToTypes[group] = [];
+            if (!groupToTypes[group].includes(type)) groupToTypes[group].push(type);
+        }
+        if (type && desc) {
+            if (!typeToDesc[type]) typeToDesc[type] = [];
+            if (!typeToDesc[type].includes(desc)) typeToDesc[type].push(desc);
+        }
+    });
+
+    typeToReasons = {};
+    data.reasonsList.forEach(row => {
+        let type = String(row[0] || "").trim();
+        let reasonStr = String(row[1] || "").trim();
+        if (type && reasonStr) {
+            if (!typeToReasons[type]) typeToReasons[type] = [];
+            reasonStr.split(',').forEach(r => {
+                let cleanReason = r.trim();
+                if (cleanReason && !typeToReasons[type].includes(cleanReason)) typeToReasons[type].push(cleanReason);
+            });
+        }
+    });
+
+    customerToSites = {}; siteToFleet = {}; fleetToTypes = {};
+    data.fleetList.forEach(row => {
+        let cust = String(row[0] || "").trim(), site = String(row[2] || "").trim(), fleet = String(row[3] || "").trim(), groupsStr = String(row[5] || "").trim();
+        if (cust && site) {
+            if (!customerToSites[cust]) customerToSites[cust] = [];
+            if (!customerToSites[cust].includes(site)) customerToSites[cust].push(site);
+            if (fleet) {
+                if (!siteToFleet[site]) siteToFleet[site] = [];
+                if (!siteToFleet[site].includes(fleet)) siteToFleet[site].push(fleet);
+                if (!fleetToTypes[fleet]) fleetToTypes[fleet] = new Set();
+                if (groupsStr) {
+                    groupsStr.split(',').forEach(g => {
+                        let cleanG = g.trim();
+                        if (groupToTypes[cleanG]) groupToTypes[cleanG].forEach(t => fleetToTypes[fleet].add(t));
                     });
                 }
-            });
-
-            if (payload.length === 0) {
-                alert("❌ Error: No valid data found in CSV.");
-                btn.disabled = false; wrn.style.display = "none";
-                return;
             }
+        }
+    });
+}
 
-            fetch(scriptURL, { method: "POST", body: JSON.stringify(payload), mode: 'no-cors' })
-            .then(() => {
-                const now = new Date();
-                const dateStr = now.toLocaleDateString('en-GB').replace(/\//g, '-');
-                const rowCount = payload.length;
+function updateSites() {
+    const s = document.getElementById('site');
+    s.innerHTML = '<option value="">- Select Site -</option>';
+    const c = document.getElementById('cust').value;
+    if (customerToSites[c]) customerToSites[c].sort().forEach(site => s.add(new Option(site, site)));
+    document.getElementById('main-area').style.display = 'none';
+}
 
-                document.getElementById('lastDate').innerText = dateStr;
-                document.getElementById('lastRows').innerText = rowCount;
-                
-                const log = document.getElementById('activityLog');
-                if(log) {
-                    log.style.borderColor = "#28a745";
-                    log.style.color = "#155724";
-                }
+function buildFleetDashboard() {
+    const container = document.getElementById('fleet-container');
+    container.innerHTML = "";
+    const site = document.getElementById('site').value;
+    
+    if (!site || !siteToFleet[site]) return;
 
-                alert(`✅ SUCCESS\n\n${rowCount} rows for ${payload[0].Fleet_ID} were synced at ${now.toLocaleTimeString()}.\n\nRecords have been saved to GSheet.`);
-                
-                btn.disabled = false; 
-                wrn.style.display = "none";
-                document.getElementById('csvFileInput').value = "";
-            })
-            .catch(err => {
-                alert("❌ Upload Failed: " + err);
-                btn.disabled = false; wrn.style.display = "none";
+    const headerRow = document.createElement('div');
+    headerRow.className = "t-header-row";
+    headerRow.innerHTML = `
+        <div class="t-fleet">Fleet Asset</div>
+        <div style="padding-left:5px;">Consumables Added <span style="color:#666; text-transform:none;">(Type, Desc, Part No, Reason, New Qty, Old Rtn, Lost/Bent)</span></div>
+    `;
+    container.appendChild(headerRow);
+
+    siteToFleet[site].sort().forEach(fleet => {
+        const row = document.createElement('div');
+        row.className = "t-row";
+        row.id = "fleet-" + fleet;
+        row.innerHTML = `
+            <div class="t-fleet">${fleet}</div>
+            <div class="t-parts" id="parts-${fleet}"></div>
+            <button type="button" class="btn-add-table" onclick="addPartColumn('${fleet}')" title="Add Part">+</button>
+        `;
+        container.appendChild(row);
+        addPartColumn(fleet); 
+    });
+
+    document.getElementById('main-area').style.display = 'block';
+}
+
+function addPartColumn(fleetId) {
+    const allowedTypes = fleetId && fleetToTypes[fleetId] ? Array.from(fleetToTypes[fleetId]).sort() : [];
+    const typeOpts = allowedTypes.map(t => `<option value="${t}">${t}</option>`).join('');
+
+    const block = document.createElement('div');
+    block.className = "t-part-block";
+    block.innerHTML = `
+        <select class="p-type" onchange="updateRowCascades(this)"><option value="">- Type -</option>${typeOpts}</select>
+        <select class="p-desc"><option value="">- Description -</option></select>
+        <input type="text" class="p-no" placeholder="Part No">
+        <select class="p-reason"><option value="">- Reason -</option></select>
+        <input type="number" class="p-qty" placeholder="New Qty" title="New Quantity Issued">
+        <input type="number" class="p-old" placeholder="Old Rtn" title="Old Quantity Returned">
+        <input type="number" class="p-bend" placeholder="Lost/Bent" title="Quantity Lost or Bent">
+        <button type="button" class="btn-del-table" onclick="this.parentElement.remove()" title="Remove">X</button>
+    `;
+    document.getElementById(`parts-${fleetId}`).appendChild(block);
+}
+
+function updateRowCascades(el) {
+    const block = el.closest('.t-part-block');
+    const type = el.value;
+    const descSel = block.querySelector('.p-desc');
+    const reasonSel = block.querySelector('.p-reason');
+    
+    descSel.innerHTML = '<option value="">- Description -</option>';
+    reasonSel.innerHTML = '<option value="">- Reason -</option>';
+    
+    if (typeToDesc[type]) typeToDesc[type].sort().forEach(d => descSel.add(new Option(d, d)));
+    if (typeToReasons[type]) typeToReasons[type].sort().forEach(r => reasonSel.add(new Option(r, r)));
+}
+
+function reviewData() {
+    pendingPayload = [];
+    const summaryBody = document.getElementById('summaryBody');
+    summaryBody.innerHTML = '';
+    
+    const tech = document.getElementById('user').value;
+    const pass = document.getElementById('pass').value;
+    const cust = document.getElementById('cust').value;
+    const site = document.getElementById('site').value;
+    const date = document.getElementById('date').value;
+
+    document.querySelectorAll('.t-row').forEach(row => {
+        const fleetId = row.id.replace("fleet-", "");
+
+        row.querySelectorAll('.t-part-block').forEach(block => {
+            const type = block.querySelector('.p-type').value;
+            const desc = block.querySelector('.p-desc').value;
+            const no = block.querySelector('.p-no').value;
+            const reason = block.querySelector('.p-reason').value;
+            
+            const qty = parseFloat(block.querySelector('.p-qty').value) || 0;
+            const oldRtn = parseFloat(block.querySelector('.p-old').value) || 0;
+            const bendLost = parseFloat(block.querySelector('.p-bend').value) || 0;
+
+            if (type && qty > 0) {
+                pendingPayload.push({
+                    Technician_Name: tech,
+                    Unlock_Password: pass,
+                    Customer_Name: cust,
+                    Work_Site: site,
+                    Fleet_ID: fleetId,
+                    Entry_Date: date,
+                    Part_Group: "", 
+                    Part_Type: type,
+                    Part_Description: desc,
+                    Part_Number: no,
+                    Quantity: qty,
+                    Reason_to_Replace: reason,
+                    Remarks: "Added via App", 
+                    Old_Return_Qty: oldRtn,      
+                    Bend_Lost_Qty: bendLost,     
+                    Unit_Price: 0, 
+                    File_ID: "BULK_" + Date.now() 
+                });
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="color: var(--epi-yellow); font-weight: bold;">${fleetId}</td>
+                    <td>${type}<br><span style="color:#888; font-size:0.75rem;">${desc || "No Description"}</span></td>
+                    <td>${reason || "-"}</td>
+                    <td style="font-weight: bold;">${qty}</td>
+                    <td style="color: #00E676; font-weight: bold;">${oldRtn}</td>
+                    <td style="color: #F44336; font-weight: bold;">${bendLost}</td>
+                `;
+                summaryBody.appendChild(tr);
+            }
+        });
+    });
+
+    if (pendingPayload.length === 0) return alert("No valid parts data entered. Please fill Type and New Qty.");
+    document.getElementById('confirmModal').style.display = 'flex';
+}
+
+function closeModal() { document.getElementById('confirmModal').style.display = 'none'; }
+
+async function executeSubmission() {
+    closeModal();
+    const btn = document.getElementById('finalSubmitBtn');
+    btn.disabled = true;
+
+    document.getElementById('loader').style.display = 'flex';
+    document.getElementById('load-text').innerText = "Uploading to Vault...";
+
+    try {
+        const res = await fetch(scriptURL, { method: "POST", body: JSON.stringify(pendingPayload), mode: 'no-cors' });
+        document.getElementById('loader').style.display = 'none';
+        alert(`✅ SUCCESS: ${pendingPayload.length} part records saved to Database.`);
+        document.getElementById('main-area').style.display = 'none';
+        btn.disabled = false;
+        pendingPayload = []; 
+    } catch (err) {
+        document.getElementById('loader').style.display = 'none';
+        alert("❌ Submission Error: " + err);
+        btn.disabled = false;
+    }
+}
+
+// --- NEW FUNCTION: DOWNLOAD CSV TEMPLATE ---
+function downloadCSVTemplate() {
+    const headers = [
+        "Technician_Name", "Unlock_Password", "Customer_Name", "Work_Site", 
+        "Fleet_ID", "Entry_Date", "Part_Group", "Part_Type", "Part_Description", 
+        "Part_Number", "Quantity", "Reason_to_Replace", "Old_Return_Qty", 
+        "Bend_Lost_Qty", "Unit_Price", "Remarks"
+    ];
+    const csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n";
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "Rocktool_Bulk_Upload_Template.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+async function handleFileUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    document.getElementById('loader').style.display = 'flex';
+    document.getElementById('load-text').innerText = "Parsing & Uploading CSV...";
+
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+        const text = e.target.result;
+        const rows = text.split("\n").filter(row => row.trim() !== "");
+        const headers = rows[0].split(",");
+        
+        let jsonData = [];
+        
+        for (let i = 1; i < rows.length; i++) {
+            const values = rows[i].split(",");
+            if (values.length < headers.length) continue;
+
+            // Map CSV to the JSON payload structure
+            jsonData.push({
+                Technician_Name: document.getElementById('user').value,
+                Unlock_Password: document.getElementById('pass').value,
+                Customer_Name: values[2], // Adjust index based on CSV template
+                Work_Site: values[3],
+                Fleet_ID: values[4],
+                Entry_Date: values[5],
+                Part_Group: values[6],
+                Part_Type: values[7],
+                Part_Description: values[8],
+                Part_Number: values[9],
+                Quantity: parseFloat(values[10]),
+                Reason_to_Replace: values[11],
+                Old_Return_Qty: parseFloat(values[12]) || 0,
+                Bend_Lost_Qty: parseFloat(values[13]) || 0,
+                Unit_Price: parseFloat(values[14]) || 0,
+                Remarks: values[15] || "Bulk Upload",
+                File_ID: "BULK_" + Date.now() + "_" + i
             });
-        };
-        reader.readAsText(file);
-    }
+        }
 
-    // 📝 FORM SUBMIT
-    document.getElementById('consumptionForm').onsubmit = function(e) {
-        e.preventDefault();
-        
-        const btn = document.getElementById('submitBtn');
-        const techPass = document.getElementById('passInput').value;
-        const rowCount = document.querySelectorAll('.part-block').length;
-
-        btn.innerText = "🚀 SUBMITTING " + rowCount + " RECORDS..."; 
-        btn.disabled = true;
-
-        const formData = new FormData(this);
-        formData.append('Unlock_Password', techPass); 
-
-        fetch(scriptURL, { method: 'POST', mode: 'no-cors', body: formData })
-        .then(() => { 
-            alert(`✅ SUCCESS: ${rowCount} records saved to Database.`); 
-            location.reload(); 
-        })
-        .catch(err => {
-            alert("❌ Submission Error: " + err);
-            btn.disabled = false;
-            btn.innerText = "Finalize & Submit All Records";
-        });
+        try {
+            const res = await fetch(scriptURL, { 
+                method: "POST", 
+                body: JSON.stringify(jsonData), 
+                mode: 'no-cors' 
+            });
+            document.getElementById('loader').style.display = 'none';
+            alert(`✅ Success: ${jsonData.length} records processed.`);
+            event.target.value = ''; // Reset input
+        } catch (err) {
+            document.getElementById('loader').style.display = 'none';
+            alert("Upload Error: " + err);
+        }
     };
-
-    // ➕ ADD PART LINE
-    function addPartLine() {
-        const container = document.getElementById('partsContainer');
-        const rowId = document.querySelectorAll('.part-block').length + 1;
-        
-        if(rowId > 10) return alert("🚨 Max 10 lines allowed per manual entry.");
-        
-        const clone = document.getElementById('part-row-1').cloneNode(true);
-        clone.id = "part-row-" + rowId;
-        clone.querySelector('.part-header span').innerText = "PART ENTRY #" + rowId;
-        
-        const groupSel = clone.querySelector('.group-sel');
-        groupSel.innerHTML = '<option value="">-- Select --</option>';
-        Object.keys(partsData).sort().forEach(g => {
-            let opt = document.createElement('option'); opt.value = g; opt.text = g; groupSel.add(opt);
-        });
-
-        clone.querySelector('.type-sel').innerHTML = '<option value="">-- Select Type --</option>';
-        clone.querySelector('.desc-sel').innerHTML = '<option value="">-- Select Description --</option>';
-        clone.querySelector('.reason-sel').innerHTML = '<option value="">-- Select Reason --</option>';
-
-        clone.querySelectorAll('select, input').forEach(i => {
-            i.value = (i.name === "qty[]" ? 1 : "");
-            i.style.borderColor = "#ddd"; 
-            i.style.backgroundColor = "white"; 
-        });
-
-        container.appendChild(clone);
-    }
-
-    // --- 📷 QR SCANNER ENGINE ---
-    let html5QrCode = null;
-    let targetInputBox = null;
-
-    function openScanner(btnElement) {
-        targetInputBox = btnElement.previousElementSibling;
-        const modal = document.getElementById('qrModal');
-        modal.style.display = 'flex'; 
-        modal.classList.remove('hidden');
-
-        html5QrCode = new Html5Qrcode("qr-reader");
-        const config = { fps: 10, qrbox: { width: 250, height: 250 } };
-
-        html5QrCode.start(
-            { facingMode: "environment" }, 
-            config, 
-            onScanSuccess, 
-            onScanFailure
-        ).catch(err => {
-            alert("Camera Error: " + err + "\n\nPlease ensure no other apps are using the camera.");
-            closeScanner();
-        });
-    }
-
-    function onScanSuccess(decodedText) {
-        if (targetInputBox) {
-            targetInputBox.value = decodedText.trim();
-            targetInputBox.style.borderColor = "#28a745";
-            targetInputBox.style.backgroundColor = "#e8f5e9";
-            setTimeout(() => {
-                targetInputBox.style.borderColor = "#ddd";
-                targetInputBox.style.backgroundColor = "white";
-            }, 1500);
-        }
-        closeScanner();
-    }
-
-    function onScanFailure(error) {}
-
-    function closeScanner() {
-        const modal = document.getElementById('qrModal');
-        modal.classList.add('hidden');
-        modal.style.display = 'none';
-
-        if (html5QrCode) {
-            html5QrCode.stop().then(() => {
-                html5QrCode.clear();
-                html5QrCode = null; 
-            }).catch(err => console.error(err));
-        }
-    }
+    reader.readAsText(file);
+}
 </script>
 </body>
 </html>
