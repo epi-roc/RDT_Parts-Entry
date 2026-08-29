@@ -42,8 +42,8 @@
     .t-part-block { display: flex; gap: 4px; align-items: center; background: #000; padding: 4px; border: 1px solid #333; border-radius: 4px; flex-shrink: 0; }
     
     .p-type { width: 120px; }
-    .p-desc { width: 160px; }
-    .p-no { width: 110px; }
+    .p-hole { width: 160px; }
+    .p-part { width: 140px; }
     .p-reason { width: 130px; }
     .p-qty { width: 60px; }
     .p-old { width: 60px; border-color: #00E676 !important; }
@@ -145,15 +145,18 @@
 </div>
 
 <script>
-// 🚨 PASTE YOUR DEPLOYED GOOGLE APP SCRIPT URL HERE 🚨
 const scriptURL = "https://script.google.com/macros/s/AKfycbwnhqpKWtP7AdhT0NGIGwNIBWv3yTUU3jtXeD6QF-phPxe5ZKaGyw2RY5WBzezfefEp/exec";
 
+// Global Mappings
 let customerToSites = {};
 let siteToFleet = {};
-let fleetToTypes = {}; 
-let typeToDesc = {};
 let typeToReasons = {}; 
 let pendingPayload = []; 
+
+// Tool Type Dynamic Mappings
+let siteToToolTypes = {};
+let siteToolToHoles = {};
+let siteToolHoleToParts = {};
 
 window.onload = () => document.getElementById('date').valueAsDate = new Date();
 
@@ -166,8 +169,18 @@ async function handleSync() {
     document.getElementById('load-text').innerText = "Authenticating...";
 
     try {
-        const res = await fetch(scriptURL + "?action=check&u=" + encodeURIComponent(u) + "&p=" + encodeURIComponent(p));
-        const data = await res.json();
+        const url = scriptURL + "?action=check&u=" + encodeURIComponent(u) + "&p=" + encodeURIComponent(p) + "&t=" + new Date().getTime();
+        const res = await fetch(url);
+        
+        const textResponse = await res.text();
+        let data;
+        try {
+            data = JSON.parse(textResponse);
+        } catch (parseErr) {
+            console.error("Raw response:", textResponse);
+            throw new Error("Server returned an invalid format. Check Apps Script logs.");
+        }
+
         document.getElementById('loader').style.display = 'none';
 
         if (data.status === "success") {
@@ -178,66 +191,82 @@ async function handleSync() {
             const custSelect = document.getElementById('cust');
             custSelect.innerHTML = '<option value="">- Select Customer -</option>';
             Object.keys(customerToSites).sort().forEach(c => custSelect.add(new Option(c, c)));
+            
+        } else if (data.status === "server_error") {
+            alert("Backend Error: " + data.message);
         } else {
             alert("Auth Failed: Incorrect Password or ID.");
         }
     } catch (err) {
         document.getElementById('loader').style.display = 'none';
-        alert("Network Error: " + err);
+        alert("Network/Auth Error: " + err.message);
     }
 }
 
 function buildDatabase(data) {
-    typeToDesc = {};
-    let groupToTypes = {}; 
-    
-    data.partsList.forEach(row => {
-        let group = String(row[0] || "").trim();
-        let type = String(row[1] || "").trim();
-        let desc = String(row[2] || "").trim();
-        
-        if (group && type) {
-            if (!groupToTypes[group]) groupToTypes[group] = [];
-            if (!groupToTypes[group].includes(type)) groupToTypes[group].push(type);
-        }
-        if (type && desc) {
-            if (!typeToDesc[type]) typeToDesc[type] = [];
-            if (!typeToDesc[type].includes(desc)) typeToDesc[type].push(desc);
-        }
-    });
-
     typeToReasons = {};
-    data.reasonsList.forEach(row => {
-        let type = String(row[0] || "").trim();
-        let reasonStr = String(row[1] || "").trim();
-        if (type && reasonStr) {
-            if (!typeToReasons[type]) typeToReasons[type] = [];
-            reasonStr.split(',').forEach(r => {
-                let cleanReason = r.trim();
-                if (cleanReason && !typeToReasons[type].includes(cleanReason)) typeToReasons[type].push(cleanReason);
-            });
-        }
-    });
+    if (data.reasonsList) {
+        data.reasonsList.forEach(row => {
+            let type = String(row[0] || "").trim();
+            let reasonStr = String(row[1] || "").trim();
+            if (type && reasonStr) {
+                if (!typeToReasons[type]) typeToReasons[type] = [];
+                reasonStr.split(',').forEach(r => {
+                    let cleanReason = r.trim();
+                    if (cleanReason && !typeToReasons[type].includes(cleanReason)) typeToReasons[type].push(cleanReason);
+                });
+            }
+        });
+    }
 
-    customerToSites = {}; siteToFleet = {}; fleetToTypes = {};
-    data.fleetList.forEach(row => {
-        let cust = String(row[0] || "").trim(), site = String(row[2] || "").trim(), fleet = String(row[3] || "").trim(), groupsStr = String(row[5] || "").trim();
-        if (cust && site) {
-            if (!customerToSites[cust]) customerToSites[cust] = [];
-            if (!customerToSites[cust].includes(site)) customerToSites[cust].push(site);
-            if (fleet) {
-                if (!siteToFleet[site]) siteToFleet[site] = [];
-                if (!siteToFleet[site].includes(fleet)) siteToFleet[site].push(fleet);
-                if (!fleetToTypes[fleet]) fleetToTypes[fleet] = new Set();
-                if (groupsStr) {
-                    groupsStr.split(',').forEach(g => {
-                        let cleanG = g.trim();
-                        if (groupToTypes[cleanG]) groupToTypes[cleanG].forEach(t => fleetToTypes[fleet].add(t));
-                    });
+    customerToSites = {}; 
+    siteToFleet = {}; 
+    if (data.fleetList) {
+        data.fleetList.forEach(row => {
+            let cust = String(row[0] || "").trim();
+            let site = String(row[2] || "").trim();
+            let fleet = String(row[3] || "").trim();
+            
+            if (cust && site) {
+                if (!customerToSites[cust]) customerToSites[cust] = [];
+                if (!customerToSites[cust].includes(site)) customerToSites[cust].push(site);
+                if (fleet) {
+                    if (!siteToFleet[site]) siteToFleet[site] = [];
+                    if (!siteToFleet[site].includes(fleet)) siteToFleet[site].push(fleet);
                 }
             }
-        }
-    });
+        });
+    }
+
+    siteToToolTypes = {};
+    siteToolToHoles = {};
+    siteToolHoleToParts = {};
+
+    if (data.toolTypesList) {
+        data.toolTypesList.forEach(row => {
+            let site = String(row[0] || "").trim().toUpperCase(); 
+            let holeType = String(row[1] || "").trim();   
+            let toolType = String(row[2] || "").trim();   
+            let partNo = String(row[3] || "").trim();     
+
+            if (site && toolType) {
+                if (!siteToToolTypes[site]) siteToToolTypes[site] = new Set();
+                siteToToolTypes[site].add(toolType);
+
+                if (holeType) {
+                    let key1 = site + "_" + toolType;
+                    if (!siteToolToHoles[key1]) siteToolToHoles[key1] = new Set();
+                    siteToolToHoles[key1].add(holeType);
+
+                    if (partNo) {
+                        let key2 = site + "_" + toolType + "_" + holeType;
+                        if (!siteToolHoleToParts[key2]) siteToolHoleToParts[key2] = new Set();
+                        siteToolHoleToParts[key2].add(partNo);
+                    }
+                }
+            }
+        });
+    }
 }
 
 function updateSites() {
@@ -259,7 +288,7 @@ function buildFleetDashboard() {
     headerRow.className = "t-header-row";
     headerRow.innerHTML = `
         <div class="t-fleet">Fleet Asset</div>
-        <div style="padding-left:5px;">Consumables Added <span style="color:#666; text-transform:none;">(Type, Desc, Part No, Reason, New Qty, Old Rtn, Lost/Bent)</span></div>
+        <div style="padding-left:5px;">Consumables Added <span style="color:#666; text-transform:none;">(Tool Type, Hole Type, Part No, Reason, New Qty, Old Rtn, Lost/Bent)</span></div>
     `;
     container.appendChild(headerRow);
 
@@ -280,15 +309,21 @@ function buildFleetDashboard() {
 }
 
 function addPartColumn(fleetId) {
-    const allowedTypes = fleetId && fleetToTypes[fleetId] ? Array.from(fleetToTypes[fleetId]).sort() : [];
-    const typeOpts = allowedTypes.map(t => `<option value="${t}">${t}</option>`).join('');
+    const currentSite = document.getElementById('site').value.toUpperCase();
+    
+    let typeOpts = '';
+    if (siteToToolTypes[currentSite]) {
+        Array.from(siteToToolTypes[currentSite]).sort().forEach(t => {
+            typeOpts += `<option value="${t}">${t}</option>`;
+        });
+    }
 
     const block = document.createElement('div');
     block.className = "t-part-block";
     block.innerHTML = `
-        <select class="p-type" onchange="updateRowCascades(this)"><option value="">- Type -</option>${typeOpts}</select>
-        <select class="p-desc"><option value="">- Description -</option></select>
-        <input type="text" class="p-no" placeholder="Part No">
+        <select class="p-type" onchange="updateRowCascades(this)"><option value="">- Tool Type -</option>${typeOpts}</select>
+        <select class="p-hole" onchange="updatePartNoCascade(this)"><option value="">- Hole Type -</option></select>
+        <select class="p-part"><option value="">- Part No -</option></select>
         <select class="p-reason"><option value="">- Reason -</option></select>
         <input type="number" class="p-qty" placeholder="New Qty" title="New Quantity Issued">
         <input type="number" class="p-old" placeholder="Old Rtn" title="Old Quantity Returned">
@@ -300,15 +335,46 @@ function addPartColumn(fleetId) {
 
 function updateRowCascades(el) {
     const block = el.closest('.t-part-block');
-    const type = el.value;
-    const descSel = block.querySelector('.p-desc');
+    const currentSite = document.getElementById('site').value.toUpperCase();
+    const toolType = el.value;
+    
+    const holeSel = block.querySelector('.p-hole');
+    const partSel = block.querySelector('.p-part');
     const reasonSel = block.querySelector('.p-reason');
     
-    descSel.innerHTML = '<option value="">- Description -</option>';
+    holeSel.innerHTML = '<option value="">- Hole Type -</option>';
+    partSel.innerHTML = '<option value="">- Part No -</option>';
     reasonSel.innerHTML = '<option value="">- Reason -</option>';
     
-    if (typeToDesc[type]) typeToDesc[type].sort().forEach(d => descSel.add(new Option(d, d)));
-    if (typeToReasons[type]) typeToReasons[type].sort().forEach(r => reasonSel.add(new Option(r, r)));
+    const key1 = currentSite + "_" + toolType;
+    if (siteToolToHoles[key1]) {
+        Array.from(siteToolToHoles[key1]).sort().forEach(h => holeSel.add(new Option(h, h)));
+    }
+
+    if (typeToReasons[toolType]) {
+        typeToReasons[toolType].sort().forEach(r => reasonSel.add(new Option(r, r)));
+    }
+}
+
+function updatePartNoCascade(el) {
+    const block = el.closest('.t-part-block');
+    const currentSite = document.getElementById('site').value.toUpperCase();
+    const toolType = block.querySelector('.p-type').value;
+    const holeType = el.value;
+    const partSel = block.querySelector('.p-part');
+
+    partSel.innerHTML = '<option value="">- Part No -</option>';
+
+    const key2 = currentSite + "_" + toolType + "_" + holeType;
+    if (siteToolHoleToParts[key2]) {
+        const parts = Array.from(siteToolHoleToParts[key2]).sort();
+        
+        parts.forEach(p => partSel.add(new Option(p, p)));
+
+        if (parts.length === 1) {
+            partSel.value = parts[0];
+        }
+    }
 }
 
 function reviewData() {
@@ -327,8 +393,8 @@ function reviewData() {
 
         row.querySelectorAll('.t-part-block').forEach(block => {
             const type = block.querySelector('.p-type').value;
-            const desc = block.querySelector('.p-desc').value;
-            const no = block.querySelector('.p-no').value;
+            const desc = block.querySelector('.p-hole').value; 
+            const no = block.querySelector('.p-part').value;   
             const reason = block.querySelector('.p-reason').value;
             
             const qty = parseFloat(block.querySelector('.p-qty').value) || 0;
@@ -398,11 +464,11 @@ async function executeSubmission() {
     }
 }
 
-// --- NEW FUNCTION: DOWNLOAD CSV TEMPLATE ---
+// --- UPDATED FUNCTION: DOWNLOAD CSV TEMPLATE ---
 function downloadCSVTemplate() {
+    // Removed Technician_Name, Unlock_Password, Customer_Name, Work_Site
     const headers = [
-        "Technician_Name", "Unlock_Password", "Customer_Name", "Work_Site", 
-        "Fleet_ID", "Entry_Date", "Part_Group", "Part_Type", "Part_Description", 
+        "Fleet_ID", "Entry_Date",  "Part_Type", "Hole_Type", 
         "Part_Number", "Quantity", "Reason_to_Replace", "Old_Return_Qty", 
         "Bend_Lost_Qty", "Unit_Price", "Remarks"
     ];
@@ -410,14 +476,28 @@ function downloadCSVTemplate() {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "Rocktool_Bulk_Upload_Template.csv");
+    link.setAttribute("download", "Rocktool_Compact_Template.csv");
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
 }
+
+// --- UPDATED FUNCTION: FILE UPLOAD ---
 async function handleFileUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
+
+    // Fetch the active UI selections
+    const activeTech = document.getElementById('user').value;
+    const activePass = document.getElementById('pass').value;
+    const activeCust = document.getElementById('cust').value;
+    const activeSite = document.getElementById('site').value;
+
+    if (!activeCust || !activeSite) {
+        alert("Please select a Customer and Work Site from the dropdown menus before uploading the CSV.");
+        event.target.value = ''; // Reset input
+        return;
+    }
 
     document.getElementById('loader').style.display = 'flex';
     document.getElementById('load-text').innerText = "Parsing & Uploading CSV...";
@@ -432,26 +512,27 @@ async function handleFileUpload(event) {
         
         for (let i = 1; i < rows.length; i++) {
             const values = rows[i].split(",");
-            if (values.length < headers.length) continue;
+            
+            // 🚨 FIX 1: Ignore empty "ghost" rows generated by Excel trailing commas
+            if (!values[0] || values[0].trim() === "") continue;
 
-            // Map CSV to the JSON payload structure
             jsonData.push({
-                Technician_Name: document.getElementById('user').value,
-                Unlock_Password: document.getElementById('pass').value,
-                Customer_Name: values[2], // Adjust index based on CSV template
-                Work_Site: values[3],
-                Fleet_ID: values[4],
-                Entry_Date: values[5],
-                Part_Group: values[6],
-                Part_Type: values[7],
-                Part_Description: values[8],
-                Part_Number: values[9],
-                Quantity: parseFloat(values[10]),
-                Reason_to_Replace: values[11],
-                Old_Return_Qty: parseFloat(values[12]) || 0,
-                Bend_Lost_Qty: parseFloat(values[13]) || 0,
-                Unit_Price: parseFloat(values[14]) || 0,
-                Remarks: values[15] || "Bulk Upload",
+                Technician_Name: activeTech,
+                Unlock_Password: activePass,
+                Customer_Name: activeCust,
+                Work_Site: activeSite,
+                // 🚨 FIX 2: Corrected the index mapping to prevent the shift
+                Fleet_ID: values[0].trim(),
+                Entry_Date: values[1] ? values[1].trim() : "",
+                Part_Type: values[2] ? values[2].trim() : "",
+                Hole_Type: values[3] ? values[3].trim() : "",
+                Part_Number: values[4] ? values[4].trim() : "",
+                Quantity: parseFloat(values[5]) || 0,
+                Reason_to_Replace: values[6] ? values[6].trim() : "",
+                Old_Return_Qty: parseFloat(values[7]) || 0,
+                Bend_Lost_Qty: parseFloat(values[8]) || 0,
+                Unit_Price: parseFloat(values[9]) || 0,
+                Remarks: values[10] ? values[10].trim() : "Bulk Upload",
                 File_ID: "BULK_" + Date.now() + "_" + i
             });
         }
@@ -463,11 +544,12 @@ async function handleFileUpload(event) {
                 mode: 'no-cors' 
             });
             document.getElementById('loader').style.display = 'none';
-            alert(`✅ Success: ${jsonData.length} records processed.`);
-            event.target.value = ''; // Reset input
+            alert(`✅ Success: ${jsonData.length} records processed for site ${activeSite}.`);
+            event.target.value = ''; 
         } catch (err) {
             document.getElementById('loader').style.display = 'none';
             alert("Upload Error: " + err);
+            event.target.value = '';
         }
     };
     reader.readAsText(file);
