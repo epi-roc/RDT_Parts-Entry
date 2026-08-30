@@ -330,18 +330,33 @@ function buildFleetDashboard() {
         const folder = document.createElement('div');
         folder.className = "shift-folder";
         
-        // Folder Accordion Header
+       // Folder Accordion Header
         const header = document.createElement('div');
         header.className = "shift-header";
-        header.innerHTML = `<i class="fas fa-layer-group"></i> ALL FLEETS - ${shift}`;
+        header.innerHTML = `
+            <i class="fas fa-layer-group"></i> ALL FLEETS - ${shift} 
+            <i class="fas fa-plus toggle-icon" style="margin-left: auto; color: var(--epi-yellow);"></i>
+        `;
+        
         header.onclick = function() {
             const content = this.nextElementSibling;
-            content.style.display = content.style.display === "none" ? "block" : "none";
+            const icon = this.querySelector('.toggle-icon');
+            
+            if (content.style.display === "none") {
+                content.style.display = "block";
+                icon.classList.remove('fa-plus');
+                icon.classList.add('fa-minus');
+            } else {
+                content.style.display = "none";
+                icon.classList.remove('fa-minus');
+                icon.classList.add('fa-plus');
+            }
         };
         
         // Folder Content Area
         const content = document.createElement('div');
         content.className = "shift-content";
+        content.style.display = "none"; // 🚨 FOLDED BY DEFAULT 🚨
 
         // Folder Internal Table Header
         const tableHeader = document.createElement('div');
@@ -351,9 +366,8 @@ function buildFleetDashboard() {
                 <div class="t-fleet-name">FLEET ASSET</div>
                 <div class="t-fleet-shift" style="color:#aaa;">SHIFT</div>
             </div>
-            <div style="padding-left:5px;">CONSUMABLES ADDED <span style="color:#666; text-transform:none;">(Tool Type, Hole Type, Part No, Reason, New Qty, Old Rtn, Lost/Bent)</span></div>
         `;
-        content.appendChild(tableHeader);
+        content.appendChild(tableHeader);;
 
         // Add Fleets inside this folder
         shifts[shift].sort().forEach(fleet => {
@@ -397,12 +411,18 @@ function addPartColumn(fleetId, safeShiftId) {
         });
     }
 
+    // Generate a unique ID for the datalist so rows don't interfere with each other
+    const uniqueDlId = 'dl-' + Math.random().toString(36).substr(2, 9);
+
     const block = document.createElement('div');
     block.className = "t-part-block";
     block.innerHTML = `
         <select class="p-type" onchange="updateRowCascades(this)"><option value="">- Tool Type -</option>${typeOpts}</select>
         <select class="p-hole" onchange="updatePartNoCascade(this)"><option value="">- Hole Type -</option></select>
-        <select class="p-part"><option value="">- Part No -</option></select>
+        
+        <input type="text" class="p-part" list="${uniqueDlId}" placeholder="- Part No -">
+        <datalist id="${uniqueDlId}"></datalist>
+        
         <select class="p-reason"><option value="">- Reason -</option></select>
         <input type="number" class="p-qty" placeholder="New Qty" title="New Quantity Issued">
         <input type="number" class="p-old" placeholder="Old Rtn" title="Old Quantity Returned">
@@ -410,7 +430,6 @@ function addPartColumn(fleetId, safeShiftId) {
         <button type="button" class="btn-del-table" onclick="this.parentElement.remove()" title="Remove">X</button>
     `;
     
-    // Attach to the unique container for this specific fleet and shift
     document.getElementById(`parts-${fleetId}-${safeShiftId}`).appendChild(block);
 }
 
@@ -420,11 +439,14 @@ function updateRowCascades(el) {
     const toolType = el.value;
     
     const holeSel = block.querySelector('.p-hole');
-    const partSel = block.querySelector('.p-part');
+    const partInput = block.querySelector('.p-part');
+    const datalist = block.querySelector('datalist');
     const reasonSel = block.querySelector('.p-reason');
     
+    // Clear out the subordinate fields when Tool Type changes
     holeSel.innerHTML = '<option value="">- Hole Type -</option>';
-    partSel.innerHTML = '<option value="">- Part No -</option>';
+    partInput.value = '';
+    datalist.innerHTML = '';
     reasonSel.innerHTML = '<option value="">- Reason -</option>';
     
     const key1 = currentSite + "_" + toolType;
@@ -442,22 +464,30 @@ function updatePartNoCascade(el) {
     const currentSite = document.getElementById('site').value.toUpperCase();
     const toolType = block.querySelector('.p-type').value;
     const holeType = el.value;
-    const partSel = block.querySelector('.p-part');
+    const partInput = block.querySelector('.p-part');
+    const datalist = block.querySelector('datalist');
 
-    partSel.innerHTML = '<option value="">- Part No -</option>';
+    // Reset the Part No field
+    partInput.value = '';
+    datalist.innerHTML = '';
 
     const key2 = currentSite + "_" + toolType + "_" + holeType;
     if (siteToolHoleToParts[key2]) {
         const parts = Array.from(siteToolHoleToParts[key2]).sort();
         
-        parts.forEach(p => partSel.add(new Option(p, p)));
+        // Add options to the hidden datalist for the dropdown effect
+        parts.forEach(p => {
+            const opt = document.createElement('option');
+            opt.value = p;
+            datalist.appendChild(opt);
+        });
 
+        // Auto-populate the input field if there is exactly 1 option
         if (parts.length === 1) {
-            partSel.value = parts[0];
+            partInput.value = parts[0];
         }
     }
 }
-
 function reviewData() {
     pendingPayload = [];
     const summaryBody = document.getElementById('summaryBody');
@@ -550,9 +580,10 @@ async function executeSubmission() {
         btn.disabled = false;
     }
 }
+// --- UPDATED FUNCTION: DOWNLOAD CSV TEMPLATE ---
 function downloadCSVTemplate() {
     const headers = [
-        "Fleet_ID", "Entry_Date", "Part_Type", "Hole_Type", 
+        "Shift", "Fleet_ID", "Entry_Date", "Part_Type", "Hole_Type", 
         "Part_Number", "Quantity", "Reason_to_Replace", "Old_Return_Qty", 
         "Bend_Lost_Qty", "Unit_Price", "Remarks"
     ];
@@ -566,6 +597,7 @@ function downloadCSVTemplate() {
     document.body.removeChild(link);
 }
 
+// --- UPDATED FUNCTION: FILE UPLOAD ---
 async function handleFileUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -592,34 +624,33 @@ async function handleFileUpload(event) {
         
         let jsonData = [];
         
+        // Loop through CSV rows (skipping the header row)
         for (let i = 1; i < rows.length; i++) {
             const values = rows[i].split(",");
-            if (!values[0] || values[0].trim() === "") continue;
-
-            const fleetId = values[0].trim();
             
-            // If the user uploads via CSV, we bundle all assigned shifts together 
-            // since the CSV template doesn't specify an individual shift.
-            const fleetShifts = fleetToShifts[fleetId] || ["Unassigned"];
-            const shiftString = fleetShifts.join(', ');
+            // Skip ghost rows
+            if (!values[0] || values[0].trim() === "") continue;
 
             jsonData.push({
                 Technician_Name: activeTech,
                 Unlock_Password: activePass,
                 Customer_Name: activeCust,
                 Work_Site: activeSite,
-                Shift: shiftString, 
-                Fleet_ID: fleetId,
-                Entry_Date: values[1] ? values[1].trim() : "",
-                Part_Type: values[2] ? values[2].trim() : "",
-                Hole_Type: values[3] ? values[3].trim() : "",
-                Part_Number: values[4] ? values[4].trim() : "",
-                Quantity: parseFloat(values[5]) || 0,
-                Reason_to_Replace: values[6] ? values[6].trim() : "",
-                Old_Return_Qty: parseFloat(values[7]) || 0,
-                Bend_Lost_Qty: parseFloat(values[8]) || 0,
-                Unit_Price: parseFloat(values[9]) || 0,
-                Remarks: values[10] ? values[10].trim() : "Bulk Upload",
+                
+                // 🚨 CORRECTED CSV INDEX MAPPING 🚨
+                Shift: values[0] ? values[0].trim() : "",
+                Fleet_ID: values[1] ? values[1].trim() : "",
+                Entry_Date: values[2] ? values[2].trim() : "",
+                Part_Type: values[3] ? values[3].trim() : "",
+                Hole_Type: values[4] ? values[4].trim() : "",
+                Part_Number: values[5] ? values[5].trim() : "",
+                Quantity: parseFloat(values[6]) || 0,
+                Reason_to_Replace: values[7] ? values[7].trim() : "",
+                Old_Return_Qty: parseFloat(values[8]) || 0,
+                Bend_Lost_Qty: parseFloat(values[9]) || 0,
+                Unit_Price: parseFloat(values[10]) || 0,
+                Remarks: values[11] ? values[11].trim() : "Bulk Upload",
+                
                 File_ID: "BULK_" + Date.now() + "_" + i
             });
         }
@@ -641,6 +672,7 @@ async function handleFileUpload(event) {
     };
     reader.readAsText(file);
 }
+
 </script>
 </body>
 </html>
