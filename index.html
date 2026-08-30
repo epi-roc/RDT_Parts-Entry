@@ -26,14 +26,23 @@
 
     main { padding: 25px 20px; max-width: 98vw; margin: 0 auto; display: none; }
     
-    .table-wrapper { overflow-x: auto; background: var(--card); border: 1px solid #333; border-radius: 6px; margin-bottom: 20px; }
+    .table-wrapper { overflow-x: auto; margin-bottom: 20px; }
     #fleet-container { min-width: max-content; }
+
+    /* --- SHIFT FOLDER STYLES --- */
+    .shift-folder { margin-bottom: 15px; border: 1px solid #333; border-radius: 6px; overflow: hidden; }
+    .shift-header { background: #111; padding: 12px 15px; font-weight: 900; font-size: 1.1rem; color: #fff; cursor: pointer; border-left: 4px solid var(--epi-yellow); display: flex; align-items: center; gap: 10px; text-transform: uppercase; border-bottom: 1px solid #222; transition: 0.2s; }
+    .shift-header:hover { background: #1a1a1a; }
+    .shift-content { background: var(--card); display: block; }
     
+    /* --- FLEET & SHIFT COLUMNS --- */
     .t-header-row { display: flex; gap: 8px; padding: 10px; background: #222; font-size: 0.7rem; text-transform: uppercase; font-weight: bold; color: #aaa; border-bottom: 2px solid var(--epi-yellow); position: sticky; top: 0; z-index: 10; }
     .t-row { display: flex; gap: 8px; padding: 8px 10px; border-bottom: 1px solid #222; align-items: stretch; background: #111; }
     .t-row:hover { background: #1a1a1a; }
 
-    .t-fleet { width: 180px; flex-shrink: 0; display: flex; align-items: center; font-weight: bold; color: var(--epi-yellow); font-size: 0.9rem; border-right: 1px solid #333; padding-right: 10px; }
+    .t-fleet-container { width: 280px; flex-shrink: 0; display: flex; align-items: stretch; border-right: 1px solid #333; padding-right: 10px; }
+    .t-fleet-name { flex: 1; font-weight: bold; color: var(--epi-yellow); font-size: 0.9rem; display: flex; align-items: center; }
+    .t-fleet-shift { width: 70px; border-left: 1px solid #333; padding-left: 10px; font-size: 0.85rem; display: flex; align-items: center; font-weight: bold; color: #fff; }
 
     .t-row input, .t-row select { background: #000; color: #fff; border: 1px solid #444; padding: 6px; font-size: 0.8rem; border-radius: 3px; width: 100%; outline: none; }
     .t-row input:focus, .t-row select:focus { border-color: var(--epi-yellow); }
@@ -145,11 +154,13 @@
 </div>
 
 <script>
+// 🚨 PASTE YOUR DEPLOYED GOOGLE APP SCRIPT URL HERE 🚨
 const scriptURL = "https://script.google.com/macros/s/AKfycbwnhqpKWtP7AdhT0NGIGwNIBWv3yTUU3jtXeD6QF-phPxe5ZKaGyw2RY5WBzezfefEp/exec";
 
 // Global Mappings
 let customerToSites = {};
 let siteToFleet = {};
+let fleetToShifts = {}; // NEW: Stores an array of multiple shifts per fleet
 let typeToReasons = {}; 
 let pendingPayload = []; 
 
@@ -221,11 +232,14 @@ function buildDatabase(data) {
 
     customerToSites = {}; 
     siteToFleet = {}; 
+    fleetToShifts = {}; // Initialize array mapping
+
     if (data.fleetList) {
         data.fleetList.forEach(row => {
             let cust = String(row[0] || "").trim();
             let site = String(row[2] || "").trim();
             let fleet = String(row[3] || "").trim();
+            let shiftRaw = String(row[5] || "Unassigned").trim(); 
             
             if (cust && site) {
                 if (!customerToSites[cust]) customerToSites[cust] = [];
@@ -233,6 +247,16 @@ function buildDatabase(data) {
                 if (fleet) {
                     if (!siteToFleet[site]) siteToFleet[site] = [];
                     if (!siteToFleet[site].includes(fleet)) siteToFleet[site].push(fleet);
+                    
+                    // 🚨 EXPLODE COMMA-SEPARATED SHIFTS INTO AN ARRAY 🚨
+                    fleetToShifts[fleet] = shiftRaw.split(',')
+                        .map(s => s.trim().toUpperCase())
+                        .filter(s => s);
+                    
+                    // Fallback if empty
+                    if (fleetToShifts[fleet].length === 0) {
+                        fleetToShifts[fleet] = ["UNASSIGNED"];
+                    }
                 }
             }
         });
@@ -284,31 +308,86 @@ function buildFleetDashboard() {
     
     if (!site || !siteToFleet[site]) return;
 
-    const headerRow = document.createElement('div');
-    headerRow.className = "t-header-row";
-    headerRow.innerHTML = `
-        <div class="t-fleet">Fleet Asset</div>
-        <div style="padding-left:5px;">Consumables Added <span style="color:#666; text-transform:none;">(Tool Type, Hole Type, Part No, Reason, New Qty, Old Rtn, Lost/Bent)</span></div>
-    `;
-    container.appendChild(headerRow);
+    // 1. Group Fleets by Shift (Splitting into individual folders)
+    const shifts = {};
+    siteToFleet[site].forEach(fleet => {
+        const fShifts = fleetToShifts[fleet] || ["UNASSIGNED"];
+        fShifts.forEach(s => {
+            let shiftName = s;
+            if (!shiftName.includes("SHIFT") && shiftName !== "UNASSIGNED") {
+                shiftName = "SHIFT " + shiftName; // Auto-format "C" to "SHIFT C"
+            }
+            if (!shifts[shiftName]) shifts[shiftName] = [];
+            shifts[shiftName].push(fleet);
+        });
+    });
 
-    siteToFleet[site].sort().forEach(fleet => {
-        const row = document.createElement('div');
-        row.className = "t-row";
-        row.id = "fleet-" + fleet;
-        row.innerHTML = `
-            <div class="t-fleet">${fleet}</div>
-            <div class="t-parts" id="parts-${fleet}"></div>
-            <button type="button" class="btn-add-table" onclick="addPartColumn('${fleet}')" title="Add Part">+</button>
+    // 2. Build Folder for each isolated Shift in specific order (C, A, B)
+    const shiftOrder = { "SHIFT C": 1, "SHIFT A": 2, "SHIFT B": 3 };
+    
+    Object.keys(shifts).sort((a, b) => (shiftOrder[a] || 99) - (shiftOrder[b] || 99)).forEach(shift => {
+        const safeShiftId = shift.replace(/[^a-zA-Z0-9]/g, '-');
+        const folder = document.createElement('div');
+        folder.className = "shift-folder";
+        
+        // Folder Accordion Header
+        const header = document.createElement('div');
+        header.className = "shift-header";
+        header.innerHTML = `<i class="fas fa-layer-group"></i> ALL FLEETS - ${shift}`;
+        header.onclick = function() {
+            const content = this.nextElementSibling;
+            content.style.display = content.style.display === "none" ? "block" : "none";
+        };
+        
+        // Folder Content Area
+        const content = document.createElement('div');
+        content.className = "shift-content";
+
+        // Folder Internal Table Header
+        const tableHeader = document.createElement('div');
+        tableHeader.className = "t-header-row";
+        tableHeader.innerHTML = `
+            <div class="t-fleet-container">
+                <div class="t-fleet-name">FLEET ASSET</div>
+                <div class="t-fleet-shift" style="color:#aaa;">SHIFT</div>
+            </div>
+            <div style="padding-left:5px;">CONSUMABLES ADDED <span style="color:#666; text-transform:none;">(Tool Type, Hole Type, Part No, Reason, New Qty, Old Rtn, Lost/Bent)</span></div>
         `;
-        container.appendChild(row);
-        addPartColumn(fleet); 
+        content.appendChild(tableHeader);
+
+        // Add Fleets inside this folder
+        shifts[shift].sort().forEach(fleet => {
+            const row = document.createElement('div');
+            row.className = "t-row";
+            // Store fleet and specific shift in data attributes to avoid ID clashes
+            row.setAttribute('data-fleet', fleet);
+            row.setAttribute('data-shift', shift);
+            row.innerHTML = `
+                <div class="t-fleet-container">
+                    <div class="t-fleet-name">${fleet}</div>
+                    <div class="t-fleet-shift">${shift}</div>
+                </div>
+                <div class="t-parts" id="parts-${fleet}-${safeShiftId}"></div>
+                <button type="button" class="btn-add-table" onclick="addPartColumn('${fleet}', '${safeShiftId}')" title="Add Part">+</button>
+            `;
+            content.appendChild(row);
+        });
+
+        folder.appendChild(header);
+        folder.appendChild(content);
+        container.appendChild(folder);
+    });
+
+    // 3. Initialize Dropdowns once the DOM is assembled
+    Object.keys(shifts).forEach(shift => {
+        const safeShiftId = shift.replace(/[^a-zA-Z0-9]/g, '-');
+        shifts[shift].forEach(fleet => addPartColumn(fleet, safeShiftId));
     });
 
     document.getElementById('main-area').style.display = 'block';
 }
 
-function addPartColumn(fleetId) {
+function addPartColumn(fleetId, safeShiftId) {
     const currentSite = document.getElementById('site').value.toUpperCase();
     
     let typeOpts = '';
@@ -330,7 +409,9 @@ function addPartColumn(fleetId) {
         <input type="number" class="p-bend" placeholder="Lost/Bent" title="Quantity Lost or Bent">
         <button type="button" class="btn-del-table" onclick="this.parentElement.remove()" title="Remove">X</button>
     `;
-    document.getElementById(`parts-${fleetId}`).appendChild(block);
+    
+    // Attach to the unique container for this specific fleet and shift
+    document.getElementById(`parts-${fleetId}-${safeShiftId}`).appendChild(block);
 }
 
 function updateRowCascades(el) {
@@ -388,8 +469,10 @@ function reviewData() {
     const site = document.getElementById('site').value;
     const date = document.getElementById('date').value;
 
+    // Iterate through all rows, extracting the specific shift applied
     document.querySelectorAll('.t-row').forEach(row => {
-        const fleetId = row.id.replace("fleet-", "");
+        const fleetId = row.getAttribute('data-fleet');
+        const currentShift = row.getAttribute('data-shift');
 
         row.querySelectorAll('.t-part-block').forEach(block => {
             const type = block.querySelector('.p-type').value;
@@ -407,6 +490,7 @@ function reviewData() {
                     Unlock_Password: pass,
                     Customer_Name: cust,
                     Work_Site: site,
+                    Shift: currentShift, 
                     Fleet_ID: fleetId,
                     Entry_Date: date,
                     Part_Group: "", 
@@ -424,7 +508,7 @@ function reviewData() {
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td style="color: var(--epi-yellow); font-weight: bold;">${fleetId}</td>
+                    <td style="color: var(--epi-yellow); font-weight: bold;">${fleetId} <span style="color:#aaa; font-size:0.7rem;">(${currentShift})</span></td>
                     <td>${type}<br><span style="color:#888; font-size:0.75rem;">${desc || "No Description"}</span></td>
                     <td>${reason || "-"}</td>
                     <td style="font-weight: bold;">${qty}</td>
@@ -454,7 +538,10 @@ async function executeSubmission() {
         const res = await fetch(scriptURL, { method: "POST", body: JSON.stringify(pendingPayload), mode: 'no-cors' });
         document.getElementById('loader').style.display = 'none';
         alert(`✅ SUCCESS: ${pendingPayload.length} part records saved to Database.`);
-        document.getElementById('main-area').style.display = 'none';
+        
+        // 🚨 RESET THE FORM INSTEAD OF HIDING IT 🚨
+        buildFleetDashboard(); 
+        
         btn.disabled = false;
         pendingPayload = []; 
     } catch (err) {
@@ -463,12 +550,9 @@ async function executeSubmission() {
         btn.disabled = false;
     }
 }
-
-// --- UPDATED FUNCTION: DOWNLOAD CSV TEMPLATE ---
 function downloadCSVTemplate() {
-    // Removed Technician_Name, Unlock_Password, Customer_Name, Work_Site
     const headers = [
-        "Fleet_ID", "Entry_Date",  "Part_Type", "Hole_Type", 
+        "Fleet_ID", "Entry_Date", "Part_Type", "Hole_Type", 
         "Part_Number", "Quantity", "Reason_to_Replace", "Old_Return_Qty", 
         "Bend_Lost_Qty", "Unit_Price", "Remarks"
     ];
@@ -482,12 +566,10 @@ function downloadCSVTemplate() {
     document.body.removeChild(link);
 }
 
-// --- UPDATED FUNCTION: FILE UPLOAD ---
 async function handleFileUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
 
-    // Fetch the active UI selections
     const activeTech = document.getElementById('user').value;
     const activePass = document.getElementById('pass').value;
     const activeCust = document.getElementById('cust').value;
@@ -495,7 +577,7 @@ async function handleFileUpload(event) {
 
     if (!activeCust || !activeSite) {
         alert("Please select a Customer and Work Site from the dropdown menus before uploading the CSV.");
-        event.target.value = ''; // Reset input
+        event.target.value = ''; 
         return;
     }
 
@@ -512,17 +594,22 @@ async function handleFileUpload(event) {
         
         for (let i = 1; i < rows.length; i++) {
             const values = rows[i].split(",");
-            
-            // 🚨 FIX 1: Ignore empty "ghost" rows generated by Excel trailing commas
             if (!values[0] || values[0].trim() === "") continue;
+
+            const fleetId = values[0].trim();
+            
+            // If the user uploads via CSV, we bundle all assigned shifts together 
+            // since the CSV template doesn't specify an individual shift.
+            const fleetShifts = fleetToShifts[fleetId] || ["Unassigned"];
+            const shiftString = fleetShifts.join(', ');
 
             jsonData.push({
                 Technician_Name: activeTech,
                 Unlock_Password: activePass,
                 Customer_Name: activeCust,
                 Work_Site: activeSite,
-                // 🚨 FIX 2: Corrected the index mapping to prevent the shift
-                Fleet_ID: values[0].trim(),
+                Shift: shiftString, 
+                Fleet_ID: fleetId,
                 Entry_Date: values[1] ? values[1].trim() : "",
                 Part_Type: values[2] ? values[2].trim() : "",
                 Hole_Type: values[3] ? values[3].trim() : "",
