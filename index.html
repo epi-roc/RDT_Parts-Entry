@@ -26,43 +26,32 @@
 
     main { padding: 25px 20px; max-width: 98vw; margin: 0 auto; display: none; }
     
-    .table-wrapper { overflow-x: auto; margin-bottom: 20px; }
-    #fleet-container { min-width: max-content; }
-
-    /* --- SHIFT FOLDER STYLES --- */
-    .shift-folder { margin-bottom: 15px; border: 1px solid #333; border-radius: 6px; overflow: hidden; }
-    .shift-header { background: #111; padding: 12px 15px; font-weight: 900; font-size: 1.1rem; color: #fff; cursor: pointer; border-left: 4px solid var(--epi-yellow); display: flex; align-items: center; gap: 10px; text-transform: uppercase; border-bottom: 1px solid #222; transition: 0.2s; }
-    .shift-header:hover { background: #1a1a1a; }
-    .shift-content { background: var(--card); display: block; }
+    .table-wrapper { overflow-x: auto; margin-bottom: 20px; background: var(--card); padding: 15px; border-radius: 6px; border: 1px solid #333; }
     
-    /* --- FLEET & SHIFT COLUMNS --- */
-    .t-header-row { display: flex; gap: 8px; padding: 10px; background: #222; font-size: 0.7rem; text-transform: uppercase; font-weight: bold; color: #aaa; border-bottom: 2px solid var(--epi-yellow); position: sticky; top: 0; z-index: 10; }
-    .t-row { display: flex; gap: 8px; padding: 8px 10px; border-bottom: 1px solid #222; align-items: stretch; background: #111; }
-    .t-row:hover { background: #1a1a1a; }
+    /* --- CONSUMPTION TABLE STYLES --- */
+    .consumption-table { width: 100%; border-collapse: collapse; min-width: 1000px; }
+    .consumption-table th { background: #222; color: #aaa; font-size: 0.75rem; text-transform: uppercase; font-weight: bold; padding: 12px 8px; text-align: left; border-bottom: 2px solid var(--epi-yellow); }
+    .consumption-table td { padding: 8px; border-bottom: 1px solid #222; vertical-align: middle; }
+    .consumption-table tr:hover { background: #1a1a1a; }
 
-    .t-fleet-container { width: 280px; flex-shrink: 0; display: flex; align-items: stretch; border-right: 1px solid #333; padding-right: 10px; }
-    .t-fleet-name { flex: 1; font-weight: bold; color: var(--epi-yellow); font-size: 0.9rem; display: flex; align-items: center; }
-    .t-fleet-shift { width: 70px; border-left: 1px solid #333; padding-left: 10px; font-size: 0.85rem; display: flex; align-items: center; font-weight: bold; color: #fff; }
+    .consumption-table input, .consumption-table select { background: #000; color: #fff; border: 1px solid #444; padding: 8px; font-size: 0.85rem; border-radius: 3px; width: 100%; outline: none; }
+    .consumption-table input:focus, .consumption-table select:focus { border-color: var(--epi-yellow); }
 
-    .t-row input, .t-row select { background: #000; color: #fff; border: 1px solid #444; padding: 6px; font-size: 0.8rem; border-radius: 3px; width: 100%; outline: none; }
-    .t-row input:focus, .t-row select:focus { border-color: var(--epi-yellow); }
+    .col-date { width: 140px; }
+    .col-shift { width: 100px; }
+    .col-type { width: 180px; }
+    .col-part { width: 150px; }
+    .col-reason { width: 150px; }
+    .col-qty { width: 80px; }
+    .col-old { width: 80px; border-color: #00E676 !important; }
+    .col-bend { width: 90px; border-color: #F44336 !important; }
+    .col-action { width: 90px; text-align: center; }
 
-    .t-parts { display: flex; gap: 5px; }
-    .t-part-block { display: flex; gap: 4px; align-items: center; background: #000; padding: 4px; border: 1px solid #333; border-radius: 4px; flex-shrink: 0; }
-    
-    .p-type { width: 120px; }
-    .p-hole { width: 160px; }
-    .p-part { width: 140px; }
-    .p-reason { width: 130px; }
-    .p-qty { width: 60px; }
-    .p-old { width: 60px; border-color: #00E676 !important; }
-    .p-bend { width: 70px; border-color: #F44336 !important; }
+    .btn-del-row { background: #444; color: #fff; border: none; padding: 6px 10px; border-radius: 3px; cursor: pointer; }
+    .btn-del-row:hover { background: #ff4444; }
 
-    .btn-del-table { background: #444; color: #fff; border: none; padding: 6px 10px; border-radius: 3px; cursor: pointer; margin-left: 2px; }
-    .btn-del-table:hover { background: #ff4444; }
-
-    .btn-add-table { background: #222; color: var(--epi-yellow); border: 1px dashed var(--epi-yellow); padding: 0 15px; border-radius: 4px; cursor: pointer; font-size: 1rem; font-weight: bold; display: flex; align-items: center; justify-content: center; margin-left: 5px; flex-shrink: 0; }
-    .btn-add-table:hover { background: #333; }
+    .btn-add-row { background: #222; color: var(--epi-yellow); border: 1px dashed var(--epi-yellow); padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 0.9rem; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 15px; width: 100%; text-transform: uppercase; }
+    .btn-add-row:hover { background: #333; }
 
     .primary-btn { background: var(--epi-yellow); color: #000; border: none; padding: 15px; border-radius: 6px; font-weight: 900; font-size: 1rem; cursor: pointer; width: 100%; max-width: 400px; margin: 20px auto; display: block; text-transform: uppercase; }
     
@@ -73,7 +62,7 @@
 
     /* Modal Styles */
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; z-index: 9000; padding: 20px; }
-    .modal-content { background: #111; border: 1px solid #444; border-top: 4px solid var(--epi-yellow); border-radius: 8px; width: 100%; max-width: 800px; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; }
+    .modal-content { background: #111; border: 1px solid #444; border-top: 4px solid var(--epi-yellow); border-radius: 8px; width: 100%; max-width: 900px; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; }
     .modal-header { padding: 15px 20px; background: #000; font-weight: bold; font-size: 1.2rem; color: var(--epi-yellow); text-transform: uppercase; border-bottom: 1px solid #333; }
     .modal-body { padding: 20px; overflow-y: auto; flex-grow: 1; }
     .modal-footer { padding: 15px 20px; background: #000; border-top: 1px solid #333; display: flex; justify-content: flex-end; gap: 10px; }
@@ -105,28 +94,42 @@
 </div>
 
 <div class="control-bar" id="data-bar" style="display: none;">
-    <div class="item"><label>Date</label><input type="date" id="date"></div>
     <div class="item"><label>Customer</label><select id="cust" onchange="updateSites()"></select></div>
-    <div class="item"><label>Work Site</label><select id="site" onchange="buildFleetDashboard()"></select></div>
+    <div class="item"><label>Work Site</label><select id="site" onchange="onSiteChange()"></select></div>
     
     <div class="item" style="flex-direction: row; gap: 10px;">
-        <div class="item" style="flex-direction: row; gap: 10px;">
-    <button class="sync-btn" style="background:#00E676; color:#000;" onclick="downloadCSVTemplate()"><i class="fas fa-file-csv"></i> TEMPLATE</button>
-    
-    <input type="file" id="csvFileInput" accept=".csv" style="display:none" onchange="handleFileUpload(event)">
-    <button class="sync-btn" style="background:#fff; color:#000;" onclick="document.getElementById('csvFileInput').click()"><i class="fas fa-upload"></i> UPLOAD CSV</button>
-</div>
-        <button class="sync-btn" style="background:#333; color:#fff; width: 100%;" onclick="location.reload()"><i class="fas fa-sign-out-alt"></i> LOGOUT</button>
+        <button class="sync-btn" style="background:#00E676; color:#000;" onclick="downloadCSVTemplate()"><i class="fas fa-file-csv"></i> TEMPLATE</button>
+        <input type="file" id="csvFileInput" accept=".csv" style="display:none" onchange="handleFileUpload(event)">
+        <button class="sync-btn" style="background:#fff; color:#000;" onclick="document.getElementById('csvFileInput').click()"><i class="fas fa-upload"></i> UPLOAD CSV</button>
+        <button class="sync-btn" style="background:#333; color:#fff;" onclick="location.reload()"><i class="fas fa-sign-out-alt"></i> LOGOUT</button>
     </div>
 </div>
 
 <main id="main-area">
     <div class="table-wrapper">
-        <div id="fleet-container"></div>
+        <table class="consumption-table">
+            <thead>
+                <tr>
+                    <th class="col-date">Date</th>
+                    <th class="col-shift">Shift</th>
+                    <th class="col-type">Tool Type</th>
+                    <th class="col-desc">Part Description</th>
+                    <th class="col-part">Part No</th>
+                    <th class="col-reason">Reason</th>
+                    <th class="col-qty">New Qty</th>
+                    <th class="col-old" style="color:#00E676;">Old Rtn</th>
+                    <th class="col-bend" style="color:#F44336;">Lost/Bent</th>
+                    <th class="col-action">Action</th>
+                </tr>
+            </thead>
+            <tbody id="consumptionBody">
+                <!-- Rows dynamically added via script -->
+            </tbody>
+        </table>
+        <button type="button" class="btn-add-row" onclick="addRow()"><i class="fas fa-plus"></i> Add Tool Consumption Row</button>
     </div>
     <button type="button" class="primary-btn" onclick="reviewData()">REVIEW & SUBMIT RECORDS</button>
 </main>
-
 <div class="modal-overlay" id="confirmModal">
     <div class="modal-content">
         <div class="modal-header">Confirm Submission</div>
@@ -135,8 +138,10 @@
             <table class="summary-table">
                 <thead>
                     <tr>
-                        <th>Fleet</th>
-                        <th>Type / Description</th>
+                        <th>Date</th>
+                        <th>Shift</th>
+                        <th>Tool Type</th>
+                        <th>Part No</th>
                         <th>Reason</th>
                         <th>New Qty</th>
                         <th style="color:#00E676;">Old Rtn</th>
@@ -153,23 +158,20 @@
     </div>
 </div>
 
+
 <script>
 // 🚨 PASTE YOUR DEPLOYED GOOGLE APP SCRIPT URL HERE 🚨
 const scriptURL = "https://script.google.com/macros/s/AKfycbwnhqpKWtP7AdhT0NGIGwNIBWv3yTUU3jtXeD6QF-phPxe5ZKaGyw2RY5WBzezfefEp/exec";
 
 // Global Mappings
 let customerToSites = {};
-let siteToFleet = {};
-let fleetToShifts = {}; // NEW: Stores an array of multiple shifts per fleet
+let siteToToolTypes = {};
+let siteToolToDescriptions = {};
+let siteToolDescToPartNo = {};
 let typeToReasons = {}; 
 let pendingPayload = []; 
 
-// Tool Type Dynamic Mappings
-let siteToToolTypes = {};
-let siteToolToHoles = {};
-let siteToolHoleToParts = {};
-
-window.onload = () => document.getElementById('date').valueAsDate = new Date();
+window.onload = () => {};
 
 async function handleSync() {
     const u = document.getElementById('user').value.trim();
@@ -231,65 +233,58 @@ function buildDatabase(data) {
     }
 
     customerToSites = {}; 
-    siteToFleet = {}; 
-    fleetToShifts = {}; // Initialize array mapping
-
     if (data.fleetList) {
         data.fleetList.forEach(row => {
             let cust = String(row[0] || "").trim();
             let site = String(row[2] || "").trim();
-            let fleet = String(row[3] || "").trim();
-            let shiftRaw = String(row[5] || "Unassigned").trim(); 
-            
             if (cust && site) {
                 if (!customerToSites[cust]) customerToSites[cust] = [];
                 if (!customerToSites[cust].includes(site)) customerToSites[cust].push(site);
-                if (fleet) {
-                    if (!siteToFleet[site]) siteToFleet[site] = [];
-                    if (!siteToFleet[site].includes(fleet)) siteToFleet[site].push(fleet);
-                    
-                    // 🚨 EXPLODE COMMA-SEPARATED SHIFTS INTO AN ARRAY 🚨
-                    fleetToShifts[fleet] = shiftRaw.split(',')
-                        .map(s => s.trim().toUpperCase())
-                        .filter(s => s);
-                    
-                    // Fallback if empty
-                    if (fleetToShifts[fleet].length === 0) {
-                        fleetToShifts[fleet] = ["UNASSIGNED"];
-                    }
-                }
             }
         });
     }
 
     siteToToolTypes = {};
-    siteToolToHoles = {};
-    siteToolHoleToParts = {};
+    siteToolToDescriptions = {};
+    siteToolDescToPartNo = {};
+    let globalToolTypes = new Set();
 
     if (data.toolTypesList) {
         data.toolTypesList.forEach(row => {
+            // Col A = Site[cite: 7], Col B = Tool Type[cite: 7], Col C = Part Description[cite: 7], Col D = Part Number[cite: 7]
             let site = String(row[0] || "").trim().toUpperCase(); 
-            let holeType = String(row[1] || "").trim();   
-            let toolType = String(row[2] || "").trim();   
+            let toolType = String(row[1] || "").trim();   
+            let desc = String(row[2] || "").trim();       
             let partNo = String(row[3] || "").trim();     
 
-            if (site && toolType) {
-                if (!siteToToolTypes[site]) siteToToolTypes[site] = new Set();
-                siteToToolTypes[site].add(toolType);
+            if (toolType) {
+                globalToolTypes.add(toolType);
 
-                if (holeType) {
-                    let key1 = site + "_" + toolType;
-                    if (!siteToolToHoles[key1]) siteToolToHoles[key1] = new Set();
-                    siteToolToHoles[key1].add(holeType);
+                // Universal / Global lookup map so it works regardless of site name variation
+                if (desc) {
+                    let gKey1 = "GLOBAL_" + toolType;
+                    if (!siteToolToDescriptions[gKey1]) siteToolToDescriptions[gKey1] = new Set();
+                    siteToolToDescriptions[gKey1].add(desc);
 
                     if (partNo) {
-                        let key2 = site + "_" + toolType + "_" + holeType;
-                        if (!siteToolHoleToParts[key2]) siteToolHoleToParts[key2] = new Set();
-                        siteToolHoleToParts[key2].add(partNo);
+                        let gKey2 = "GLOBAL_" + toolType + "_" + desc;
+                        siteToolDescToPartNo[gKey2] = partNo;
+                    }
+                }
+
+                if (site && desc) {
+                    let key1 = site + "_" + toolType;
+                    if (!siteToolToDescriptions[key1]) siteToolToDescriptions[key1] = new Set();
+                    siteToolToDescriptions[key1].add(desc);
+
+                    if (partNo) {
+                        let key2 = site + "_" + toolType + "_" + desc;
+                        siteToolDescToPartNo[key2] = partNo;
                     }
                 }
             }
         });
+        siteToToolTypes["GLOBAL"] = globalToolTypes;
     }
 }
 
@@ -298,197 +293,154 @@ function updateSites() {
     s.innerHTML = '<option value="">- Select Site -</option>';
     const c = document.getElementById('cust').value;
     if (customerToSites[c]) customerToSites[c].sort().forEach(site => s.add(new Option(site, site)));
+    
+    document.getElementById('consumptionBody').innerHTML = '';
     document.getElementById('main-area').style.display = 'none';
 }
-
-function buildFleetDashboard() {
-    const container = document.getElementById('fleet-container');
-    container.innerHTML = "";
+function onSiteChange() {
     const site = document.getElementById('site').value;
+    document.getElementById('consumptionBody').innerHTML = '';
     
-    if (!site || !siteToFleet[site]) return;
-
-    // 1. Group Fleets by Shift (Splitting into individual folders)
-    const shifts = {};
-    siteToFleet[site].forEach(fleet => {
-        const fShifts = fleetToShifts[fleet] || ["UNASSIGNED"];
-        fShifts.forEach(s => {
-            let shiftName = s;
-            if (!shiftName.includes("SHIFT") && shiftName !== "UNASSIGNED") {
-                shiftName = "SHIFT " + shiftName; // Auto-format "C" to "SHIFT C"
-            }
-            if (!shifts[shiftName]) shifts[shiftName] = [];
-            shifts[shiftName].push(fleet);
-        });
-    });
-
-    // 2. Build Folder for each isolated Shift in specific order (C, A, B)
-    const shiftOrder = { "SHIFT C": 1, "SHIFT A": 2, "SHIFT B": 3 };
-    
-    Object.keys(shifts).sort((a, b) => (shiftOrder[a] || 99) - (shiftOrder[b] || 99)).forEach(shift => {
-        const safeShiftId = shift.replace(/[^a-zA-Z0-9]/g, '-');
-        const folder = document.createElement('div');
-        folder.className = "shift-folder";
-        
-       // Folder Accordion Header
-        const header = document.createElement('div');
-        header.className = "shift-header";
-        header.innerHTML = `
-            <i class="fas fa-layer-group"></i> ALL FLEETS - ${shift} 
-            <i class="fas fa-plus toggle-icon" style="margin-left: auto; color: var(--epi-yellow);"></i>
-        `;
-        
-        header.onclick = function() {
-            const content = this.nextElementSibling;
-            const icon = this.querySelector('.toggle-icon');
-            
-            if (content.style.display === "none") {
-                content.style.display = "block";
-                icon.classList.remove('fa-plus');
-                icon.classList.add('fa-minus');
-            } else {
-                content.style.display = "none";
-                icon.classList.remove('fa-minus');
-                icon.classList.add('fa-plus');
-            }
-        };
-        
-        // Folder Content Area
-        const content = document.createElement('div');
-        content.className = "shift-content";
-        content.style.display = "none"; // 🚨 FOLDED BY DEFAULT 🚨
-
-        // Folder Internal Table Header
-        const tableHeader = document.createElement('div');
-        tableHeader.className = "t-header-row";
-        tableHeader.innerHTML = `
-            <div class="t-fleet-container">
-                <div class="t-fleet-name">FLEET ASSET</div>
-                <div class="t-fleet-shift" style="color:#aaa;">SHIFT</div>
-            </div>
-        `;
-        content.appendChild(tableHeader);;
-
-        // Add Fleets inside this folder
-        shifts[shift].sort().forEach(fleet => {
-            const row = document.createElement('div');
-            row.className = "t-row";
-            // Store fleet and specific shift in data attributes to avoid ID clashes
-            row.setAttribute('data-fleet', fleet);
-            row.setAttribute('data-shift', shift);
-            row.innerHTML = `
-                <div class="t-fleet-container">
-                    <div class="t-fleet-name">${fleet}</div>
-                    <div class="t-fleet-shift">${shift}</div>
-                </div>
-                <div class="t-parts" id="parts-${fleet}-${safeShiftId}"></div>
-                <button type="button" class="btn-add-table" onclick="addPartColumn('${fleet}', '${safeShiftId}')" title="Add Part">+</button>
-            `;
-            content.appendChild(row);
-        });
-
-        folder.appendChild(header);
-        folder.appendChild(content);
-        container.appendChild(folder);
-    });
-
-    // 3. Initialize Dropdowns once the DOM is assembled
-    Object.keys(shifts).forEach(shift => {
-        const safeShiftId = shift.replace(/[^a-zA-Z0-9]/g, '-');
-        shifts[shift].forEach(fleet => addPartColumn(fleet, safeShiftId));
-    });
-
-    document.getElementById('main-area').style.display = 'block';
+    if (site) {
+        addRow(); // Generates tool types for the selected site
+        document.getElementById('main-area').style.display = 'block';
+    } else {
+        document.getElementById('main-area').style.display = 'none';
+    }
 }
 
-function addPartColumn(fleetId, safeShiftId) {
+function addRow() {
     const currentSite = document.getElementById('site').value.toUpperCase();
+    const defaultDate = new Date().toISOString().split('T')[0];
     
-    let typeOpts = '';
-    if (siteToToolTypes[currentSite]) {
-        Array.from(siteToToolTypes[currentSite]).sort().forEach(t => {
+    let typeOpts = '<option value="">- Tool Type -</option>';
+    
+    let toolsToUse = siteToToolTypes[currentSite] && siteToToolTypes[currentSite].size > 0 
+        ? siteToToolTypes[currentSite] 
+        : siteToToolTypes["GLOBAL"];
+
+    if (toolsToUse) {
+        Array.from(toolsToUse).sort().forEach(t => {
             typeOpts += `<option value="${t}">${t}</option>`;
         });
     }
 
-    // Generate a unique ID for the datalist so rows don't interfere with each other
-    const uniqueDlId = 'dl-' + Math.random().toString(36).substr(2, 9);
+    const uniqueDescId = 'desc-dl-' + Math.random().toString(36).substr(2, 9);
+    const uniquePartId = 'part-dl-' + Math.random().toString(36).substr(2, 9);
 
-    const block = document.createElement('div');
-    block.className = "t-part-block";
-    block.innerHTML = `
-        <select class="p-type" onchange="updateRowCascades(this)"><option value="">- Tool Type -</option>${typeOpts}</select>
-        <select class="p-hole" onchange="updatePartNoCascade(this)"><option value="">- Hole Type -</option></select>
-        
-        <input type="text" class="p-part" list="${uniqueDlId}" placeholder="- Part No -">
-        <datalist id="${uniqueDlId}"></datalist>
-        
-        <select class="p-reason"><option value="">- Reason -</option></select>
-        <input type="number" class="p-qty" placeholder="New Qty" title="New Quantity Issued">
-        <input type="number" class="p-old" placeholder="Old Rtn" title="Old Quantity Returned">
-        <input type="number" class="p-bend" placeholder="Lost/Bent" title="Quantity Lost or Bent">
-        <button type="button" class="btn-del-table" onclick="this.parentElement.remove()" title="Remove">X</button>
+    const tbody = document.getElementById('consumptionBody');
+    const tr = document.createElement('tr');
+    tr.className = "consumption-row";
+    tr.innerHTML = `
+        <td class="col-date"><input type="date" class="r-date" value="${defaultDate}"></td>
+        <td class="col-shift">
+            <select class="r-shift">
+                <option value="SHIFT C">Shift C</option>
+                <option value="SHIFT A">Shift A</option>
+                <option value="SHIFT B">Shift B</option>
+            </select>
+        </td>
+        <td class="col-type"><select class="r-type" onchange="updateToolTypeCascade(this)">${typeOpts}</select></td>
+        <td class="col-desc">
+            <input type="text" class="r-desc" list="${uniqueDescId}" placeholder="- Select or Type -" 
+                   onfocus="this.setAttribute('list', '${uniqueDescId}');" 
+                   oninput="updateDescriptionCascade(this)">
+            <datalist id="${uniqueDescId}"></datalist>
+        </td>
+        <td class="col-part">
+            <input type="text" class="r-part" list="${uniquePartId}" placeholder="- Enter Part No -"
+                   onfocus="this.setAttribute('list', '${uniquePartId}');">
+            <datalist id="${uniquePartId}"></datalist>
+        </td>
+        <td class="col-reason"><select class="r-reason"><option value="">- Reason -</option></select></td>
+        <td class="col-qty"><input type="number" class="r-qty" placeholder="0"></td>
+        <td class="col-old"><input type="number" class="r-old" placeholder="0"></td>
+        <td class="col-bend"><input type="number" class="r-bend" placeholder="0"></td>
+        <td class="col-action"><button type="button" class="btn-del-row" onclick="this.closest('tr').remove()" title="Delete Row"><i class="fas fa-trash"></i></button></td>
     `;
-    
-    document.getElementById(`parts-${fleetId}-${safeShiftId}`).appendChild(block);
+    tbody.appendChild(tr);
 }
 
-function updateRowCascades(el) {
-    const block = el.closest('.t-part-block');
+function updateToolTypeCascade(el) {
+    const row = el.closest('tr');
     const currentSite = document.getElementById('site').value.toUpperCase();
     const toolType = el.value;
     
-    const holeSel = block.querySelector('.p-hole');
-    const partInput = block.querySelector('.p-part');
-    const datalist = block.querySelector('datalist');
-    const reasonSel = block.querySelector('.p-reason');
+    const descInput = row.querySelector('.r-desc');
+    const descDatalist = descInput.nextElementSibling;
     
-    // Clear out the subordinate fields when Tool Type changes
-    holeSel.innerHTML = '<option value="">- Hole Type -</option>';
+    const partInput = row.querySelector('.r-part');
+    const partDatalist = partInput.nextElementSibling;
+    
+    const reasonSel = row.querySelector('.r-reason');
+    
+    descInput.value = '';
+    descDatalist.innerHTML = '';
     partInput.value = '';
-    datalist.innerHTML = '';
+    partDatalist.innerHTML = '';
     reasonSel.innerHTML = '<option value="">- Reason -</option>';
     
-    const key1 = currentSite + "_" + toolType;
-    if (siteToolToHoles[key1]) {
-        Array.from(siteToolToHoles[key1]).sort().forEach(h => holeSel.add(new Option(h, h)));
+    // 1. Populate Part Descriptions datalist dynamically for this Tool Type
+    let key1 = currentSite + "_" + toolType;
+    if (!siteToolToDescriptions[key1] || siteToolToDescriptions[key1].size === 0) {
+        key1 = "GLOBAL_" + toolType;
     }
 
-    if (typeToReasons[toolType]) {
-        typeToReasons[toolType].sort().forEach(r => reasonSel.add(new Option(r, r)));
-    }
-}
-
-function updatePartNoCascade(el) {
-    const block = el.closest('.t-part-block');
-    const currentSite = document.getElementById('site').value.toUpperCase();
-    const toolType = block.querySelector('.p-type').value;
-    const holeType = el.value;
-    const partInput = block.querySelector('.p-part');
-    const datalist = block.querySelector('datalist');
-
-    // Reset the Part No field
-    partInput.value = '';
-    datalist.innerHTML = '';
-
-    const key2 = currentSite + "_" + toolType + "_" + holeType;
-    if (siteToolHoleToParts[key2]) {
-        const parts = Array.from(siteToolHoleToParts[key2]).sort();
-        
-        // Add options to the hidden datalist for the dropdown effect
-        parts.forEach(p => {
-            const opt = document.createElement('option');
-            opt.value = p;
-            datalist.appendChild(opt);
+    // Fallback: Also gather any description matching this tool type globally if key is missing
+    let descriptionsTopper = siteToolToDescriptions[key1] ? Array.from(siteToolToDescriptions[key1]) : [];
+    if (descriptionsTopper.length === 0) {
+        Object.keys(siteToolToDescriptions).forEach(k => {
+            if (k.includes(toolType)) {
+                siteToolToDescriptions[k].forEach(d => descriptionsTopper.push(d));
+            }
         });
+    }
 
-        // Auto-populate the input field if there is exactly 1 option
-        if (parts.length === 1) {
-            partInput.value = parts[0];
+    Array.from(new Set(descriptionsTopper)).sort().forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d;
+        descDatalist.appendChild(opt);
+    });
+
+    // 2. Populate Part Numbers suggestions datalist
+    let allPartsForType = new Set();
+    Object.keys(siteToolDescToPartNo).forEach(k => {
+        if (k.includes(toolType)) {
+            allPartsForType.add(siteToolDescToPartNo[k]);
         }
+    });
+    Array.from(allPartsForType).sort().forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p;
+        partDatalist.appendChild(opt);
+    });
+
+    // 3. Populate Reasons
+    if (typeToReasons[toolType]) {
+        typeToReasons[toolType].sort().forEach(r => {
+            reasonSel.add(new Option(r, r));
+        });
     }
 }
-function reviewData() {
+
+function updateDescriptionCascade(el) {
+    const row = el.closest('tr');
+    const currentSite = document.getElementById('site').value.toUpperCase();
+    const toolType = row.querySelector('.r-type').value;
+    const desc = el.value.trim();
+    const partInput = row.querySelector('.r-part');
+
+    if (!desc) return;
+
+    let key2 = currentSite + "_" + toolType + "_" + desc;
+    if (!siteToolDescToPartNo[key2]) {
+        key2 = "GLOBAL_" + toolType + "_" + desc;
+    }
+
+    if (siteToolDescToPartNo[key2]) {
+        partInput.value = siteToolDescToPartNo[key2];
+    }
+}function reviewData() {
     pendingPayload = [];
     const summaryBody = document.getElementById('summaryBody');
     summaryBody.innerHTML = '';
@@ -497,64 +449,62 @@ function reviewData() {
     const pass = document.getElementById('pass').value;
     const cust = document.getElementById('cust').value;
     const site = document.getElementById('site').value;
-    const date = document.getElementById('date').value;
 
-    // Iterate through all rows, extracting the specific shift applied
-    document.querySelectorAll('.t-row').forEach(row => {
-        const fleetId = row.getAttribute('data-fleet');
-        const currentShift = row.getAttribute('data-shift');
+    document.querySelectorAll('.consumption-row').forEach(row => {
+        const rowDate = row.querySelector('.r-date').value;
+        const shift = row.querySelector('.r-shift').value;
+        const type = row.querySelector('.r-type').value;
+        const desc = row.querySelector('.r-desc').value;
+        const partNo = row.querySelector('.r-part').value;
+        const reason = row.querySelector('.r-reason').value;
+        const qty = parseFloat(row.querySelector('.r-qty').value) || 0;
+        const oldRtn = parseFloat(row.querySelector('.r-old').value) || 0;
+        const bendLost = parseFloat(row.querySelector('.r-bend').value) || 0;
 
-        row.querySelectorAll('.t-part-block').forEach(block => {
-            const type = block.querySelector('.p-type').value;
-            const desc = block.querySelector('.p-hole').value; 
-            const no = block.querySelector('.p-part').value;   
-            const reason = block.querySelector('.p-reason').value;
-            
-            const qty = parseFloat(block.querySelector('.p-qty').value) || 0;
-            const oldRtn = parseFloat(block.querySelector('.p-old').value) || 0;
-            const bendLost = parseFloat(block.querySelector('.p-bend').value) || 0;
+        if (type && qty > 0) {
+            pendingPayload.push({
+                Technician_Name: tech,
+                Unlock_Password: pass,
+                Customer_Name: cust,
+                Work_Site: site,
+                Shift: shift,
+                Fleet_ID: "N/A",
+                Entry_Date: rowDate,
+                Part_Group: "",
+                Part_Type: type,
+                Part_Description: desc,
+                Part_Number: partNo,
+                Quantity: qty,
+                Reason_to_Replace: reason,
+                Remarks: "Added via App",
+                Old_Return_Qty: oldRtn,
+                Bend_Lost_Qty: bendLost,
+                Unit_Price: 0,
+                File_ID: "BULK_" + Date.now()
+            });
 
-            if (type && qty > 0) {
-                pendingPayload.push({
-                    Technician_Name: tech,
-                    Unlock_Password: pass,
-                    Customer_Name: cust,
-                    Work_Site: site,
-                    Shift: currentShift, 
-                    Fleet_ID: fleetId,
-                    Entry_Date: date,
-                    Part_Group: "", 
-                    Part_Type: type,
-                    Part_Description: desc,
-                    Part_Number: no,
-                    Quantity: qty,
-                    Reason_to_Replace: reason,
-                    Remarks: "Added via App", 
-                    Old_Return_Qty: oldRtn,      
-                    Bend_Lost_Qty: bendLost,     
-                    Unit_Price: 0, 
-                    File_ID: "BULK_" + Date.now() 
-                });
-
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td style="color: var(--epi-yellow); font-weight: bold;">${fleetId} <span style="color:#aaa; font-size:0.7rem;">(${currentShift})</span></td>
-                    <td>${type}<br><span style="color:#888; font-size:0.75rem;">${desc || "No Description"}</span></td>
-                    <td>${reason || "-"}</td>
-                    <td style="font-weight: bold;">${qty}</td>
-                    <td style="color: #00E676; font-weight: bold;">${oldRtn}</td>
-                    <td style="color: #F44336; font-weight: bold;">${bendLost}</td>
-                `;
-                summaryBody.appendChild(tr);
-            }
-        });
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${rowDate}</td>
+                <td><span style="color: var(--epi-yellow);">${shift}</span></td>
+                <td>${type}<br><span style="color:#aaa; font-size:0.75rem;">${desc || ""}</span></td>
+                <td>${partNo || "-"}</td>
+                <td>${reason || "-"}</td>
+                <td style="font-weight: bold;">${qty}</td>
+                <td style="color: #00E676; font-weight: bold;">${oldRtn}</td>
+                <td style="color: #F44336; font-weight: bold;">${bendLost}</td>
+            `;
+            summaryBody.appendChild(tr);
+        }
     });
 
-    if (pendingPayload.length === 0) return alert("No valid parts data entered. Please fill Type and New Qty.");
+    if (pendingPayload.length === 0) return alert("No valid consumption data entered. Please select Tool Type, Part Description, and New Qty.");
     document.getElementById('confirmModal').style.display = 'flex';
 }
 
-function closeModal() { document.getElementById('confirmModal').style.display = 'none'; }
+function closeModal() { 
+    document.getElementById('confirmModal').style.display = 'none'; 
+}
 
 async function executeSubmission() {
     closeModal();
@@ -565,39 +515,37 @@ async function executeSubmission() {
     document.getElementById('load-text').innerText = "Uploading to Vault...";
 
     try {
-        const res = await fetch(scriptURL, { method: "POST", body: JSON.stringify(pendingPayload), mode: 'no-cors' });
+        await fetch(scriptURL, { method: "POST", body: JSON.stringify(pendingPayload), mode: 'no-cors' });
         document.getElementById('loader').style.display = 'none';
-        alert(`✅ SUCCESS: ${pendingPayload.length} part records saved to Database.`);
+        alert(`✅ SUCCESS: ${pendingPayload.length} consumption records saved to Database.`);
         
-        // 🚨 RESET THE FORM INSTEAD OF HIDING IT 🚨
-        buildFleetDashboard(); 
+        document.getElementById('consumptionBody').innerHTML = '';
+        addRow();
         
         btn.disabled = false;
-        pendingPayload = []; 
+        pendingPayload = [];
     } catch (err) {
         document.getElementById('loader').style.display = 'none';
         alert("❌ Submission Error: " + err);
         btn.disabled = false;
     }
 }
-// --- UPDATED FUNCTION: DOWNLOAD CSV TEMPLATE ---
+
 function downloadCSVTemplate() {
     const headers = [
-        "Shift", "Fleet_ID", "Entry_Date", "Part_Type", "Hole_Type", 
-        "Part_Number", "Quantity", "Reason_to_Replace", "Old_Return_Qty", 
-        "Bend_Lost_Qty", "Unit_Price", "Remarks"
+        "Entry_Date", "Shift", "Part_Type", "Part_Description", "Part_Number", 
+        "Quantity", "Reason_to_Replace", "Old_Return_Qty", "Bend_Lost_Qty", "Remarks"
     ];
     const csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n";
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "Rocktool_Compact_Template.csv");
+    link.setAttribute("download", "Rocktool_Consumption_Template.csv");
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
 }
 
-// --- UPDATED FUNCTION: FILE UPLOAD ---
 async function handleFileUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -608,8 +556,8 @@ async function handleFileUpload(event) {
     const activeSite = document.getElementById('site').value;
 
     if (!activeCust || !activeSite) {
-        alert("Please select a Customer and Work Site from the dropdown menus before uploading the CSV.");
-        event.target.value = ''; 
+        alert("Please select a Customer and Work Site before uploading the CSV.");
+        event.target.value = '';
         return;
     }
 
@@ -620,50 +568,38 @@ async function handleFileUpload(event) {
     reader.onload = async function(e) {
         const text = e.target.result;
         const rows = text.split("\n").filter(row => row.trim() !== "");
-        const headers = rows[0].split(",");
-        
         let jsonData = [];
         
-        // Loop through CSV rows (skipping the header row)
         for (let i = 1; i < rows.length; i++) {
-            const values = rows[i].split(",");
-            
-            // Skip ghost rows
-            if (!values[0] || values[0].trim() === "") continue;
+            const rowsValues = rows[i].split(",");
+            if (!rowsValues[0] || rowsValues[0].trim() === "") continue;
 
             jsonData.push({
                 Technician_Name: activeTech,
                 Unlock_Password: activePass,
                 Customer_Name: activeCust,
                 Work_Site: activeSite,
-                
-                // 🚨 CORRECTED CSV INDEX MAPPING 🚨
-                Shift: values[0] ? values[0].trim() : "",
-                Fleet_ID: values[1] ? values[1].trim() : "",
-                Entry_Date: values[2] ? values[2].trim() : "",
-                Part_Type: values[3] ? values[3].trim() : "",
-                Hole_Type: values[4] ? values[4].trim() : "",
-                Part_Number: values[5] ? values[5].trim() : "",
-                Quantity: parseFloat(values[6]) || 0,
-                Reason_to_Replace: values[7] ? values[7].trim() : "",
-                Old_Return_Qty: parseFloat(values[8]) || 0,
-                Bend_Lost_Qty: parseFloat(values[9]) || 0,
-                Unit_Price: parseFloat(values[10]) || 0,
-                Remarks: values[11] ? values[11].trim() : "Bulk Upload",
-                
+                Entry_Date: rowsValues[0] ? rowsValues[0].trim() : "",
+                Shift: rowsValues[1] ? rowsValues[1].trim() : "SHIFT C",
+                Fleet_ID: "N/A",
+                Part_Type: rowsValues[2] ? rowsValues[2].trim() : "",
+                Part_Description: rowsValues[3] ? rowsValues[3].trim() : "",
+                Part_Number: rowsValues[4] ? rowsValues[4].trim() : "",
+                Quantity: parseFloat(rowsValues[5]) || 0,
+                Reason_to_Replace: rowsValues[6] ? rowsValues[6].trim() : "",
+                Old_Return_Qty: parseFloat(rowsValues[7]) || 0,
+                Bend_Lost_Qty: parseFloat(rowsValues[8]) || 0,
+                Unit_Price: 0,
+                Remarks: rowsValues[9] ? rowsValues[9].trim() : "Bulk Upload",
                 File_ID: "BULK_" + Date.now() + "_" + i
             });
         }
 
         try {
-            const res = await fetch(scriptURL, { 
-                method: "POST", 
-                body: JSON.stringify(jsonData), 
-                mode: 'no-cors' 
-            });
+            await fetch(scriptURL, { method: "POST", body: JSON.stringify(jsonData), mode: 'no-cors' });
             document.getElementById('loader').style.display = 'none';
             alert(`✅ Success: ${jsonData.length} records processed for site ${activeSite}.`);
-            event.target.value = ''; 
+            event.target.value = '';
         } catch (err) {
             document.getElementById('loader').style.display = 'none';
             alert("Upload Error: " + err);
@@ -672,7 +608,6 @@ async function handleFileUpload(event) {
     };
     reader.readAsText(file);
 }
-
 </script>
 </body>
 </html>
